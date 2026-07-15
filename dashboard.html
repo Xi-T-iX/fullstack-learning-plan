@@ -6,7 +6,7 @@
 <title>Fullstack Plan — Learning App</title>
 <!--
   This app is a VIEW of PLAN.md / EXERCISES.md — the markdown files stay the source of truth.
-  If they change, ask Cursor: "Regenerate the PLAN_DATA / EXERCISES_DATA / CHECKLISTS blocks
+  If they change, ask Cursor: "Regenerate the WEEK_DAYS / EXERCISES_DATA / CHECKLISTS blocks
   in @dashboard.html from the current markdown files."
   Progress lives in this browser's localStorage — use Export weekly as backup.
 -->
@@ -14,7 +14,7 @@
   :root {
     --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --border: #2d333b;
     --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --accent2: #f0883e;
-    --green: #3fb950; --purple: #bc8cff; --radius: 12px;
+    --green: #3fb950; --purple: #bc8cff; --red: #f85149; --radius: 12px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -45,25 +45,49 @@
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
   .card h2 { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; }
 
+  /* Status banner */
+  #banner { border-radius: var(--radius); padding: 14px 18px; font-size: 0.92rem; border: 1px solid var(--border); display: none; }
+  #banner.pending { display: block; background: rgba(248,81,73,0.09); border-color: rgba(248,81,73,0.45); }
+  #banner.ahead   { display: block; background: rgba(63,185,80,0.09);  border-color: rgba(63,185,80,0.45); }
+  #banner.ontrack { display: block; background: var(--panel); }
+  #banner .b-title { font-weight: 700; margin-bottom: 4px; }
+  #banner.pending .b-title { color: var(--red); }
+  #banner.ahead .b-title   { color: var(--green); }
+  #banner.ontrack .b-title { color: var(--accent); }
+  #banner ul { list-style: none; margin-top: 6px; }
+  #banner li { padding: 2px 0; color: var(--muted); font-size: 0.87rem; }
+  #banner a { color: var(--accent); text-decoration: none; cursor: pointer; }
+
   #today.card { border-left: 4px solid var(--accent); }
   #tomorrow.card { border-left: 4px solid var(--purple); }
   .day-label { color: var(--accent); font-weight: 600; font-size: 0.92rem; }
   #tomorrow .day-label { color: var(--purple); }
   .topic { font-size: 1.25rem; font-weight: 650; margin: 6px 0 10px; }
   #tomorrow .topic { font-size: 1.05rem; }
+  .goal-line { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; padding: 9px 13px; font-size: 0.92rem; margin-bottom: 10px; }
+  .goal-line b { color: var(--accent); }
   .detail { font-size: 0.95rem; margin-bottom: 12px; }
   .meta { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; font-size: 0.8rem; color: var(--muted); }
   .chip b { color: var(--text); font-weight: 600; }
   .chip a, a.inline { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .study-links { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .study-links a {
+    background: var(--panel2); border: 1px solid rgba(88,166,255,0.35); border-radius: 8px;
+    padding: 6px 12px; font-size: 0.84rem; color: var(--accent); text-decoration: none;
+  }
+  .study-links a:hover { border-color: var(--accent); }
+  .study-links a::before { content: "📖 "; }
   .milestone-flag { margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(240,136,62,0.12); border: 1px solid rgba(240,136,62,0.4); color: var(--accent2); font-size: 0.88rem; }
 
   .blocks { list-style: none; }
   .blocks li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
   .blocks li:last-child { border-bottom: none; }
   .blocks .t { color: var(--accent); min-width: 88px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .blocks a { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .blocks a:hover { text-decoration: underline; }
 
-  .timeline { display: flex; height: 32px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .timeline { display: flex; height: 32px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; }
   .tl-seg { position: relative; min-width: 0; }
   .tl-seg .fill { position: absolute; inset: 0; opacity: 0.5; }
   .tl-seg .done-fill { position: absolute; top: 0; bottom: 0; left: 0; opacity: 0.95; }
@@ -80,16 +104,28 @@
   .stat .l { font-size: 0.72rem; color: var(--muted); }
 
   details.phase, details.exweek { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: var(--panel2); }
-  details summary { cursor: pointer; padding: 9px 12px; font-size: 0.92rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+  details summary { cursor: pointer; padding: 9px 12px; font-size: 0.92rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; list-style: none; gap: 8px; }
   details summary::-webkit-details-marker { display: none; }
-  details summary .pct { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
+  details summary .pct { color: var(--muted); font-weight: 500; font-size: 0.8rem; white-space: nowrap; }
   .items { padding: 4px 12px 10px; }
+
+  details.week { border: 1px solid var(--border); border-radius: 8px; margin: 6px 0; background: var(--panel); }
+  details.week summary { font-size: 0.88rem; padding: 8px 12px; }
+  details.week summary .wk-topic { font-weight: 600; }
+  details.week summary .wk-dates { color: var(--muted); font-weight: 400; font-size: 0.78rem; }
+  .week-tools { padding: 2px 14px 6px; font-size: 0.8rem; color: var(--muted); }
+  .week-tools a { color: var(--accent); text-decoration: none; cursor: pointer; margin-right: 14px; }
+  .week-ms { color: var(--accent2); }
+
   .item { display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; font-size: 0.87rem; }
   .item input { margin-top: 3px; accent-color: var(--green); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
   .item label { cursor: pointer; }
   .item .d { color: var(--muted); font-size: 0.77rem; }
   .item.done > label { color: var(--muted); text-decoration: line-through; }
   .item.today-item > label { color: var(--accent); font-weight: 600; }
+  .item.overdue-item .d { color: var(--red); }
+  .item a.mat { color: var(--accent); text-decoration: none; font-size: 0.77rem; margin-left: 6px; }
+  .item a.mat:hover { text-decoration: underline; }
 
   /* Exercise cards */
   .ex-card { border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; background: var(--panel); }
@@ -174,15 +210,16 @@
 <!-- ==================== TODAY ==================== -->
 <div class="tab-page active" id="page-today">
   <div class="grid">
+    <div id="banner" class="full"></div>
     <div class="card full" id="today"></div>
     <div class="card" id="tomorrow"></div>
     <div class="card">
       <h2>The 90-minute block</h2>
       <ul class="blocks">
-        <li><span class="t">0:00–0:10</span><span>Review yesterday's log; ask Cursor to quiz you</span></li>
-        <li><span class="t">0:10–0:40</span><span>Learn — today's resource</span></li>
-        <li><span class="t">0:40–1:25</span><span><b>Build</b> — exercise or project task</span></li>
-        <li><span class="t">1:25–1:30</span><span>Commit to GitHub + log 2–3 lines</span></li>
+        <li><span class="t">0:00–0:10</span><span>Review yesterday's log; <a onclick="copyQuizPrompt()" title="Copies a ready-made quiz prompt for Cursor">copy the quiz prompt →</a></span></li>
+        <li><span class="t">0:10–0:40</span><span>Learn — <a id="learn-link" href="#" target="_blank">today's study material →</a></span></li>
+        <li><span class="t">0:40–1:25</span><span><b>Build</b> — <a id="build-link" onclick="openBuild()">today's exercise / task →</a></span></li>
+        <li><span class="t">1:25–1:30</span><span>Commit to <a href="https://github.com/Xi-T-iX" target="_blank">GitHub</a> (<a onclick="openReading('GETTING-STARTED.md')">git recipe</a>) + log 2–3 lines</span></li>
       </ul>
     </div>
     <div class="card full">
@@ -196,16 +233,16 @@
 <div class="tab-page" id="page-plan">
   <div class="grid">
     <div class="card full">
-      <h2>Timeline — you are here</h2>
+      <h2>Timeline — you are here (click a phase to jump to it)</h2>
       <div class="timeline" id="timeline"></div>
       <div class="tl-labels" id="tl-labels"></div>
       <div class="here" id="here-text"></div>
     </div>
     <div class="card full">
-      <h2>Progress</h2>
+      <h2>Progress — every day is a checkbox inside its week</h2>
       <div class="stats">
         <div class="stat"><div class="n" id="stat-pct">0%</div><div class="l">overall</div></div>
-        <div class="stat"><div class="n" id="stat-done">0</div><div class="l">items done</div></div>
+        <div class="stat"><div class="n" id="stat-done">0</div><div class="l">days done</div></div>
         <div class="stat"><div class="n" id="stat-streak">0</div><div class="l">streak</div></div>
         <div class="stat"><div class="n" id="stat-days">–</div><div class="l">days to MVP launch</div></div>
       </div>
@@ -220,7 +257,7 @@
         <button onclick="openReading('GETTING-STARTED.md')">GETTING-STARTED.md <span class="desc">Setup, Cursor, git, recipes</span></button>
         <button onclick="openReading('RESOURCES.md')">RESOURCES.md <span class="desc">What to study each phase</span></button>
         <button onclick="openReading('EXERCISES.md')">EXERCISES.md <span class="desc">Full exercise file</span></button>
-        <a href="https://github.com" target="_blank">GitHub <span class="desc">Your repos — commit today?</span></a>
+        <a href="https://github.com/Xi-T-iX/fullstack-learning-plan" target="_blank">This repo <span class="desc">Where the app lives — commit today?</span></a>
         <a id="phase-resource" href="#" target="_blank">Current phase resource <span class="desc" id="phase-resource-desc"></span></a>
       </div>
     </div>
@@ -234,7 +271,7 @@
     <div style="font-size:0.9rem">Learn → <b>build (typed by you)</b> → verify with the self-check → explain it back to Cursor in Ask mode. Struggle 15–20 minutes before asking for help, and ask for <i>hints</i>, not answers. Weeks 0–9 are below; from Week 10, generate each week's set with the prompt at the bottom.</div>
   </div>
   <div id="exercise-weeks"></div>
-  <div class="card full" style="margin-top:16px">
+  <div class="card full" style="margin-top:16px" id="gen-section">
     <h2>Weeks 10+ — generate your exercises (copy this into Cursor)</h2>
     <pre class="prompt-box" id="gen-prompt">Based on Week N of @PLAN.md (topic: ___), generate 4 exercises for me.
 
@@ -279,7 +316,7 @@ Rules:
 
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script>
-// ===================== PLAN_DATA (generated from PLAN.md — regenerate if PLAN.md changes) =====================
+// ===================== CORE PLAN DATA =====================
 const PLAN_DATA = {
   start: "2026-07-17", week1Monday: "2026-07-20", endDate: "2027-05-08",
   phases: [
@@ -308,74 +345,6 @@ const PLAN_DATA = {
     "DevOps":          ["Docker Get Started", "https://docs.docker.com/get-started/"],
     "Capstone MVP":    ["Turborepo docs", "https://turborepo.com/docs"]
   },
-  days: {
-    "2026-07-17": ["Setup: installs + Cursor basics", "GETTING-STARTED.md sections 1–2: Node, Git, GitHub, Cursor modes, disable Tab autocomplete."],
-    "2026-07-18": ["Setup: first repo + how the web works", "Exercises 0.1 & 0.2: repo 'learning-fullstack', push hello-world, DNS→HTTP→render in your own words."],
-    "2026-07-20": ["HTML: document structure", "Headings, paragraphs, lists, links. Build a plain-HTML personal page. Exercise 1.1."],
-    "2026-07-21": ["HTML: semantic tags", "Images, attributes, header/nav/main/footer. Extend the page."],
-    "2026-07-22": ["HTML: forms", "Inputs, labels, selects, textarea. Build the project-inquiry form. Exercise 1.2."],
-    "2026-07-23": ["HTML: tables + Todo skeleton", "Static Todo app skeleton: heading, input, hardcoded list. Exercise 1.3."],
-    "2026-07-24": ["HTML: semantics + accessibility", "Cursor audit of your Todo skeleton — fix every issue by hand. Exercise 1.4."],
-    "2026-07-25": ["Project Saturday: portfolio skeleton", "One-page pure-HTML portfolio: 'computational designer building web tools for AEC'."],
-    "2026-07-27": ["CSS: selectors + text", "Selectors, colors, units, text styling. Style your personal page."],
-    "2026-07-28": ["CSS: the box model", "Margin, padding, border, box-sizing. The #1 beginner wall — take the full day. Exercise 2.1."],
-    "2026-07-29": ["CSS: display + position", "Relative/absolute/fixed/sticky. Build a fixed navbar. Exercise 2.2."],
-    "2026-07-30": ["CSS: flexbox I", "Main axis, cross axis, justify/align. Lay out the Todo app. Exercise 2.3."],
-    "2026-07-31": ["CSS: flexbox II", "Wrap, grow/shrink. Card grid of your real AEC projects. Exercise 2.4."],
-    "2026-08-01": ["Project Saturday: style the Todo app", "Make it look good, not just work."],
-    "2026-08-03": ["CSS: grid", "Template columns/rows, gap, areas."],
-    "2026-08-04": ["CSS: grid vs flexbox", "Rebuild the project cards with grid. Exercise 3.1."],
-    "2026-08-05": ["Responsive design", "Media queries, mobile-first. Todo app mobile-friendly. Exercise 3.2."],
-    "2026-08-06": ["CSS: polish", "Transitions, hovers, shadows, radius. Exercise 3.3."],
-    "2026-08-07": ["Build day: AEC SaaS landing page", "Invent a product (NOT a configurator). B2B copy: problem, outcome, CTA."],
-    "2026-08-08": ["Project Saturday: deploy!", "Landing page + portfolio live on GitHub Pages. First live URLs. Exercise 3.4."],
-    "2026-08-10": ["JS: variables + types", "let/const, operators, template strings. Browser console. Exercise 4.1."],
-    "2026-08-11": ["JS: functions", "Declarations, arrows, scope. Compare to Grasshopper components. Exercise 4.2."],
-    "2026-08-12": ["JS: array methods", "map/filter/reduce/find — Grasshopper list logic in text. Exercise 4.3."],
-    "2026-08-13": ["JS: objects + JSON", "Destructuring; model a todo AND a building element. Exercise 4.4."],
-    "2026-08-14": ["JS: practice day", "10 Cursor-generated exercises on arrays + objects, solved solo."],
-    "2026-08-15": ["Project Saturday: beam calculator", "Console app: bending moments per beam, flag overloads. Exercise 4.5."]
-  },
-  weeks: {
-    5:  ["DOM — selecting, modifying, creating elements", "Todo renders from a JS array"],
-    6:  ["Events, forms, input handling", "Todo fully interactive — Project 1 frontend done"],
-    7:  ["JS architecture — modules, closures", "Todo refactored into modules"],
-    8:  ["Async JS — promises, async/await", "Founder track starts: create problem-log.md"],
-    9:  ["Fetch deep-dive, error handling, JSON APIs", "App consuming 2 public APIs"],
-    10: ["Node vs browser JS, npm", "CLI todo tool in Node"],
-    11: ["HTTP + Express basics", "First API: GET/POST todos"],
-    12: ["Express middleware, validation (zod)", "Robust todo API"],
-    13: ["Auth — JWT, cookies, hashing", "Signup/login (platform capability: auth)"],
-    14: ["MongoDB + Mongoose", "Todos persist in Mongo"],
-    15: ["PostgreSQL + Prisma", "Project 1 fullstack done · Mom Test read"],
-    16: ["TypeScript basics", "Typed exercises"],
-    17: ["TypeScript in practice", "Todo API migrated to TS"],
-    18: ["React: components, JSX, props, state", "Stateful components"],
-    19: ["React: useEffect, lists, forms", "Todo in React · 15+ problems logged"],
-    20: ["React: router, context, hooks", "Multi-page app with auth state"],
-    21: ["Data fetching, TanStack Query", "Project 2: SpecSense — first LLM call"],
-    22: ["Tailwind", "SpecSense restyled in Tailwind"],
-    23: ["Next.js: app router, server components", "Portfolio ported to Next.js"],
-    24: ["Holiday buffer / catch-up", "Clear any backlog — rest"],
-    25: ["Next.js: API routes, server actions, auth", "Fullstack Next app with login"],
-    26: ["Next.js: deploy, env vars, Neon Postgres", "Project 3 start: ModelHub"],
-    27: ["ModelHub build week", "v1: upload, parse, filter, export · 5+ Mom Test talks"],
-    28: ["LLM APIs — prompts, tokens, cost", "CLI + API-route chatbot"],
-    29: ["Vercel AI SDK + embeddings/RAG", "Streaming chat + spec-PDF mini-RAG"],
-    30: ["IFC on the web — web-ifc / That Open", "3D viewer in ModelHub"],
-    31: ["Speckle (projects/models) + APS survey", "Speckle sync · PICK CAPSTONE PROBLEM"],
-    32: ["File pipelines — S3, queues, websockets", "ModelHub v2: async processing"],
-    33: ["Bash, SSH, VPS", "Node app on your VPS"],
-    34: ["pm2, nginx, domains, HTTPS", "Live on your own domain with SSL"],
-    35: ["Docker", "ModelHub dockerized on VPS"],
-    36: ["CI/CD + S3/CDN", "Auto-deploy · CONSULTING SOFT-LAUNCH"],
-    37: ["Capstone: spec + Turborepo monorepo", "Written spec + scaffolded monorepo"],
-    38: ["Capstone: core workflow I", "Walking skeleton works end to end"],
-    39: ["Capstone: core workflow II + integration", "Integration live with real data"],
-    40: ["Capstone: multi-tenant auth (RBAC) + AI feature", "Feature-complete for a design partner"],
-    41: ["Capstone: polish, telemetry, tests, deploy", "Production deploy on custom domain"],
-    42: ["Capstone: landing page, waitlist, case study", "MVP LAUNCHED — design partners invited"]
-  },
   founderMilestones: [
     ["2026-09-07", "Founder track starts — create problem-log.md (Week 8)"],
     ["2026-10-31", "The Mom Test finished (end of Week 15)"],
@@ -385,6 +354,352 @@ const PLAN_DATA = {
     ["2027-03-27", "Consulting soft-launch (Week 36)"],
     ["2027-05-08", "Capstone MVP launched (Week 42)"]
   ]
+};
+
+// ===================== WEEK_DAYS: every day of all 43 weeks =====================
+// t = task title · g = goal (what you can do afterwards) · d = what/how/why · l = study links
+// Week 0 has 2 days (Fri+Sat); all other weeks are Mon–Sat (6 days). Sundays are rest.
+const WEEK_DAYS = {
+0: { topic: "Setup", ms: "Repo live with a hello-world page on GitHub", days: [
+  { t: "Installs + Cursor basics", g: "Node, Git and Cursor installed and configured; you know Cursor's three modes.", d: "Work through GETTING-STARTED.md sections 1–2: install Node LTS and Git, create your GitHub account, learn Cursor's layout, Ask vs Agent mode, and disable Tab autocomplete (you type code yourself while learning).", l: [["GETTING-STARTED.md §1–2", "#read:GETTING-STARTED.md"], ["Node.js download", "https://nodejs.org/en"]] },
+  { t: "First repo + how the web works", g: "You can push a change to GitHub and explain DNS → request → response → render.", d: "Exercise 0.1: create the learning-fullstack repo and push a hello-world page. Exercise 0.2: write 5 sentences on what happens between typing a URL and seeing a page, then have Cursor grade them.", l: [["MDN: How the web works", "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works"]] }
+]},
+1: { topic: "HTML", ms: "Personal page, inquiry form and Todo skeleton exist", days: [
+  { t: "Document structure", g: "You can write a valid HTML skeleton from memory.", d: "html/head/body, headings, paragraphs, lists, links. Read the MDN intro, then build a plain personal page about yourself — no CSS yet, structure only.", l: [["MDN: HTML basics", "https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/HTML_basics"], ["MDN: Intro to HTML", "https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML"]] },
+  { t: "Semantic tags + images", g: "You can explain why header/nav/main/footer beat generic divs.", d: "Attributes, images with alt text, and the semantic layout tags. Restructure yesterday's page with proper semantics — screen readers and search engines read structure, not looks.", l: [["MDN: Document structure", "https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML/Document_and_website_structure"]] },
+  { t: "Forms", g: "You can build a labeled, browser-validated form.", d: "Inputs, labels, select, textarea, and why every input needs a label. Build the project-inquiry form (Exercise 1.2) — the same form pattern appears in every SaaS app you'll ever build.", l: [["MDN: Your first form", "https://developer.mozilla.org/en-US/docs/Learn/Forms/Your_first_form"]] },
+  { t: "Tables + Todo skeleton", g: "The static Todo structure exists — the app you'll evolve for 15 weeks.", d: "Learn tables briefly (you'll use them for data later), then build Exercise 1.3: heading, input + Add button, and a hardcoded list of 3 todos with checkboxes and delete buttons.", l: [["MDN: Tables", "https://developer.mozilla.org/en-US/docs/Learn/HTML/Tables"]] },
+  { t: "Semantics + accessibility audit", g: "Your HTML passes a Cursor accessibility audit.", d: "Exercise 1.4: ask Cursor (Ask mode) to audit your Todo skeleton for semantics and accessibility, then fix every issue by hand. Accessibility literacy is a professional differentiator.", l: [["MDN: Accessibility intro", "https://developer.mozilla.org/en-US/docs/Learn/Accessibility/What_is_accessibility"]] },
+  { t: "Project Saturday: portfolio skeleton", g: "A one-page pure-HTML portfolio exists.", d: "Build 'computational designer building web tools for AEC' as a single semantic HTML page: intro, 3 project descriptions from your real work, contact. No CSS — that's next week's payoff.", l: [] }
+]},
+2: { topic: "CSS core", ms: "Todo app and project cards styled with flexbox", days: [
+  { t: "Selectors + text styling", g: "You can target any element and style its text.", d: "Element/class/id selectors, colors, units (px/rem/%), font properties. Style your personal page. Read 'How CSS works' first — the cascade explains 90% of future confusion.", l: [["MDN: CSS first steps", "https://developer.mozilla.org/en-US/docs/Learn/CSS/First_steps"]] },
+  { t: "The box model", g: "You can predict any element's rendered size before DevTools shows you.", d: "Margin, padding, border, box-sizing. This is the #1 beginner wall — take the whole session. Do Exercise 2.1 and verify your predictions in DevTools' box-model diagram.", l: [["MDN: The box model", "https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/The_box_model"]] },
+  { t: "Display + position", g: "A fixed navbar that survives scrolling.", d: "block vs inline, relative/absolute/fixed/sticky positioning. Build Exercise 2.2 (fixed navbar). Positioning bugs are the most common CSS frustration — learn the rules now.", l: [["MDN: Positioning", "https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Positioning"]] },
+  { t: "Flexbox I", g: "You can center anything and explain main vs cross axis.", d: "display:flex, justify-content, align-items. Do Exercise 2.3 (three layouts) and lay out the Todo app. Flexbox is the layout tool you'll reach for daily.", l: [["MDN: Flexbox", "https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox"], ["Flexbox Froggy (game)", "https://flexboxfroggy.com"]] },
+  { t: "Flexbox II", g: "A wrapping card grid of your real AEC projects.", d: "flex-wrap, flex-grow/shrink/basis. Build Exercise 2.4 — cards that wrap gracefully when the window narrows. Play Flexbox Froggy to lock in the properties.", l: [["CSS-Tricks: Flexbox guide", "https://css-tricks.com/snippets/css/a-guide-to-flexbox/"]] },
+  { t: "Project Saturday: style the Todo app", g: "The Todo app looks designed, not just functional.", d: "Apply everything: spacing via the box model, flexbox layout, a color scheme, hover states on buttons. Ask Cursor to critique the result and apply one suggestion by hand.", l: [] }
+]},
+3: { topic: "Layout + responsive", ms: "Portfolio and landing page live on GitHub Pages", days: [
+  { t: "CSS Grid", g: "You can build a 2-D layout with grid tracks and gaps.", d: "grid-template-columns/rows, gap, grid areas. Grid is for 2-D layouts, flexbox for 1-D rows/columns — build a photo-grid practice page to feel the difference.", l: [["MDN: Grids", "https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Grids"], ["Grid Garden (game)", "https://cssgridgarden.com"]] },
+  { t: "Grid vs flexbox", g: "You can articulate when to use each.", d: "Exercise 3.1: rebuild the project cards with grid, compare to your flexbox version. Then explain the trade-off to Cursor — if you can't, re-read both MDN pages.", l: [["CSS-Tricks: Grid guide", "https://css-tricks.com/snippets/css/complete-guide-grid/"]] },
+  { t: "Responsive design", g: "Your Todo app works at 375px, 768px and 1200px.", d: "Media queries, mobile-first thinking, viewport meta. Exercise 3.2. Test with DevTools device toolbar (Ctrl+Shift+M) — most of your future users are on laptops AND phones.", l: [["MDN: Responsive design", "https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Responsive_Design"]] },
+  { t: "Polish: transitions + shadows", g: "Hover states and smooth 0.2s transitions everywhere.", d: "Exercise 3.3: transitions, box-shadow, border-radius. Small touches are what make an app feel professional — B2B buyers judge quality in the first 10 seconds.", l: [["MDN: Transitions", "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transitions/Using_CSS_transitions"]] },
+  { t: "Build day: AEC SaaS landing page", g: "A landing page for an invented AEC product (NOT a configurator).", d: "Problem headline, 3 feature cards, CTA button, footer. Write B2B copy: what problem, what outcome, who it's for. This doubles as founder-track practice in positioning.", l: [["Julian: landing page handbook", "https://www.julian.com/guide/startup/landing-pages"]] },
+  { t: "Project Saturday: deploy!", g: "Two live URLs you can send to anyone.", d: "Exercise 3.4: deploy the landing page and portfolio to GitHub Pages — same mechanism as this dashboard. Check them on your phone. First live deploys; celebrate.", l: [["GitHub Pages docs", "https://docs.github.com/en/pages/getting-started-with-github-pages"]] }
+]},
+4: { topic: "JavaScript basics", ms: "Beam calculator working in the console", days: [
+  { t: "Variables + types", g: "You know when to use const vs let and can read type errors.", d: "let/const, strings, numbers, booleans, template literals. Work in the browser console (F12) — instant feedback. Exercise 4.1. JS is the language of everything you'll build from here on.", l: [["javascript.info: Variables", "https://javascript.info/variables"], ["javascript.info: Types", "https://javascript.info/types"]] },
+  { t: "Functions", g: "You can write the same function three ways and explain the differences.", d: "Declarations, arrow functions, parameters, defaults, return. Exercise 4.2 (areaOfSlab three ways). Think of functions as Grasshopper components: inputs → logic → output.", l: [["javascript.info: Functions", "https://javascript.info/function-basics"], ["javascript.info: Arrow functions", "https://javascript.info/arrow-functions-basics"]] },
+  { t: "Array methods", g: "You can chain map/filter/reduce without writing a loop.", d: "Exercise 4.3: process a list of structural loads with map (safety factor), filter (threshold), reduce (total), find. This IS Grasshopper list logic in text form — your biggest transferable skill.", l: [["javascript.info: Array methods", "https://javascript.info/array-methods"]] },
+  { t: "Objects + JSON", g: "You can model a building element as an object and query an array of them.", d: "Object literals, destructuring, JSON.stringify/parse. Exercise 4.4: model beams with {id, type, material, spanMeters, loadKN}. JSON is how every API you'll ever call speaks.", l: [["javascript.info: Objects", "https://javascript.info/object"], ["javascript.info: JSON", "https://javascript.info/json"]] },
+  { t: "Practice day", g: "Ten array/object exercises solved without help.", d: "Ask Cursor to generate 10 exercises on arrays + objects (using the Week 10+ prompt in the Exercises tab as a template), solve all ten solo, then review together. Repetition builds fluency.", l: [] },
+  { t: "Project Saturday: beam calculator", g: "A console program that computes and flags bending moments.", d: "Exercise 4.5: beams array → M = wL²/8 per beam → formatted report → flag overloads. Hand-verify one beam's math. Your first program that does real engineering.", l: [] }
+]},
+5: { topic: "DOM — connecting JS to the page", ms: "Todo renders from a JS array", days: [
+  { t: "The DOM tree + selecting", g: "You can grab any element with querySelector and change it.", d: "The browser turns HTML into a live tree of objects; JS edits that tree. Learn querySelector/querySelectorAll, then do Exercise 5.1 on your Todo page.", l: [["javascript.info: DOM tree", "https://javascript.info/dom-nodes"], ["javascript.info: Searching the DOM", "https://javascript.info/searching-elements-dom"]] },
+  { t: "Modifying elements", g: "You can change text, attributes and classes from JS.", d: "textContent vs innerHTML (and why innerHTML is risky with user input), classList.add/remove/toggle, style. Practice on the Todo page — change things, break things, inspect.", l: [["javascript.info: Node properties", "https://javascript.info/basic-dom-node-properties"], ["javascript.info: Styles and classes", "https://javascript.info/styles-and-classes"]] },
+  { t: "Creating + removing elements", g: "You can build DOM nodes from scratch with createElement.", d: "createElement, append, remove. Build a small practice: a button that adds a new list item each click. This is the mechanical skill tomorrow's big idea depends on.", l: [["javascript.info: Modifying the document", "https://javascript.info/modifying-document"]] },
+  { t: "Render from data (the big idea)", g: "The page is a projection of an array — change the array, re-render.", d: "Exercise 5.2: delete your hardcoded HTML todos; define const todos = [...] and write renderTodos() that rebuilds the list from the array. This is the mental model React automates — do not rush it.", l: [["javascript.info: Modifying the document", "https://javascript.info/modifying-document"]] },
+  { t: "Style via state", g: "Visual state (done = strikethrough) driven by data, not clicks.", d: "Exercise 5.3: each todo object has done:true/false; renderTodos() toggles a CSS class accordingly. Data drives pixels — never the other way around.", l: [["javascript.info: Styles and classes", "https://javascript.info/styles-and-classes"]] },
+  { t: "Project Saturday: rebuild from scratch", g: "You can recreate the data→render pipeline from a blank file.", d: "New folder, blank files, rebuild the rendering Todo app from memory in 45 minutes. If you get stuck, peek, then start over. This test tells you if Week 5 actually stuck.", l: [] }
+]},
+6: { topic: "Events + interactivity", ms: "Todo fully interactive — Project 1 frontend done", days: [
+  { t: "Event listeners", g: "You can react to any user action with addEventListener.", d: "click, input, submit events and the event object. Wire a few throwaway buttons first to get the feel; log event objects and inspect them in the console.", l: [["javascript.info: Browser events", "https://javascript.info/introduction-browser-events"]] },
+  { t: "Forms + reading input", g: "You can read what the user typed and act on it.", d: "input.value, form submit + preventDefault, Enter-key handling. Then start Exercise 6.1: the Add button pushes into the todos array and re-renders. Notice: event → change data → render.", l: [["javascript.info: Form properties", "https://javascript.info/form-elements"]] },
+  { t: "Event delegation", g: "One listener on the list handles every delete button — even future ones.", d: "Exercise 6.2: delete and toggle via ONE listener on the ul, using event.target. Delegation is the professional pattern; per-item listeners break as items come and go.", l: [["javascript.info: Event delegation", "https://javascript.info/event-delegation"]] },
+  { t: "Finish add/delete/toggle", g: "All three operations mutate the array, then re-render.", d: "Complete Exercises 6.1 + 6.2 including the guard clause for empty input. Add 5 todos, delete the 3rd, toggle the rest — verify the right ones change.", l: [] },
+  { t: "localStorage persistence", g: "Todos survive a page refresh.", d: "Exercise 6.3: save the array to localStorage on every change, load it on startup. This is exactly how this dashboard saves YOUR progress — you're building the same mechanism.", l: [["javascript.info: localStorage", "https://javascript.info/localstorage"]] },
+  { t: "Project Saturday: ship Project 1 frontend", g: "Milestone: the Todo frontend is done.", d: "Polish, fix edge cases (empty list message, whitespace-only input), push to GitHub, and tick the first Project 1 checklist item in the Projects tab. Write a short README.", l: [] }
+]},
+7: { topic: "JS architecture — modules + closures", ms: "Todo refactored into clean modules", days: [
+  { t: "Modules: import/export", g: "You can split code across files and know why that matters.", d: "ES modules, import/export syntax, why <script type='module'> and a local server (Live Server extension) are needed. Small files with one job each = code you can reason about.", l: [["javascript.info: Modules intro", "https://javascript.info/modules-intro"]] },
+  { t: "Refactor: state vs rendering", g: "state.js has zero document references.", d: "Exercise 7.1: split the Todo app into state.js (data + operations), render.js (DOM), main.js (wiring). That separation — logic never touches pixels — is the architecture lesson of the week.", l: [] },
+  { t: "Closures", g: "You can explain what a closure closes over.", d: "Functions remember the scope they were created in. Read the chapter slowly, run the examples. Closures power every React hook you'll use later.", l: [["javascript.info: Closure", "https://javascript.info/closure"]] },
+  { t: "Closure counter + scope drills", g: "createCounter() with truly private state.", d: "Exercise 7.2: two independent counters that can't interfere, count inaccessible from outside. Then ask Cursor for 3 closure prediction-drills and predict before running.", l: [["javascript.info: Var/let scope", "https://javascript.info/var"]] },
+  { t: "Code review day", g: "Your refactor survives a senior-dev-style critique.", d: "Ask Cursor: 'Review my Todo app like a senior dev reviewing a junior's PR — architecture, naming, edge cases.' Fix what you agree with, argue what you don't. Both are learning.", l: [] },
+  { t: "Project Saturday: document the architecture", g: "A README that explains your module structure and why.", d: "Diagram (even ASCII) of state → render → main. Explaining architecture in writing is consulting practice — you'll do it for clients within a year.", l: [] }
+]},
+8: { topic: "Async JS — promises + async/await", ms: "Founder track starts: problem-log.md created", days: [
+  { t: "The event loop", g: "You can predict the order of sync vs async output.", d: "JS runs one thing at a time; async work queues up. Watch the Loupe visualization, then do Exercise 8.1 (predict-then-run). Getting this wrong is normal — iterate until you predict correctly.", l: [["javascript.info: Event loop", "https://javascript.info/event-loop"], ["Loupe (visualizer)", "http://latentflip.com/loupe/"]] },
+  { t: "Promises", g: "You can read .then/.catch chains and explain pending/fulfilled/rejected.", d: "A promise is a placeholder for a value that arrives later. Read the chapter, run the examples, write a promise that resolves after 2 seconds with a building name.", l: [["javascript.info: Promise basics", "https://javascript.info/promise-basics"]] },
+  { t: "async/await", g: "You can rewrite any .then chain as async/await with try/catch.", d: "Syntactic sugar that makes async code read like sync code. This is the style you'll use daily. Convert yesterday's practice promises to async/await.", l: [["javascript.info: async/await", "https://javascript.info/async-await"]] },
+  { t: "Fetch real data", g: "Pune's live temperature printed by your code.", d: "Exercise 8.2: fetch Open-Meteo's API with async/await, handle failure with try/catch (test with a broken URL). ALSO today: create problem-log.md — the founder track starts this week.", l: [["Open-Meteo docs", "https://open-meteo.com/en/docs"]] },
+  { t: "Sequential vs parallel", g: "You can explain why Promise.all is faster and when it's safe.", d: "Exercise 8.3: fetch 3 cities one-by-one, then with Promise.all; time both with console.time. Parallelizing independent requests is a daily real-world optimization.", l: [["javascript.info: Promise API", "https://javascript.info/promise-api"]] },
+  { t: "Project Saturday: weather mini-app", g: "A small page showing live weather, with loading and error states.", d: "Wrap the week's fetches in a real page: input a city (hardcode coordinates for now), show temperature, handle loading and errors. Push it. Log one AEC problem in problem-log.md.", l: [] }
+]},
+9: { topic: "APIs in earnest", ms: "App consuming 2 public APIs, deployed", days: [
+  { t: "Fetch deep-dive", g: "You understand status codes, headers, and response.ok.", d: "GET vs POST, response.json(), why fetch doesn't reject on 404 (check response.ok yourself). Inspect requests in the DevTools Network tab — that tab is your X-ray machine from now on.", l: [["javascript.info: Fetch", "https://javascript.info/fetch"], ["MDN: HTTP status codes", "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status"]] },
+  { t: "Error handling patterns", g: "Your fetch code fails gracefully, every time.", d: "try/catch around await, checking response.ok, user-friendly error messages vs console noise. Practice by deliberately breaking URLs, disconnecting Wi-Fi, and throttling to Slow 3G.", l: [["MDN: Using fetch", "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch"]] },
+  { t: "Reading API docs", g: "You can take an unfamiliar API's docs and make a working call.", d: "Study Open-Meteo's geocoding API docs cold: find the endpoint, required params, response shape. Reading docs fast is a superpower — most devs skim and suffer.", l: [["Open-Meteo geocoding docs", "https://open-meteo.com/en/docs/geocoding-api"]] },
+  { t: "Two-API dashboard", g: "Type any city → geocode → fetch its weather.", d: "Exercise 9.1: chain two APIs (the output of one feeds the other), with loading text and readable errors. This request-chaining pattern appears in every integration you'll ever build.", l: [] },
+  { t: "Robustness drill", g: "Loading state, empty-input guard, retry button — all working.", d: "Exercise 9.2. Throttle to Slow 3G and confirm the loading state actually shows. Robustness is what separates a demo from a product.", l: [] },
+  { t: "Project Saturday: ship the API dashboard", g: "Live on GitHub Pages with a README.", d: "Polish the two-API dashboard, push, deploy. You now have 4 live projects. Founder track: second entry in problem-log.md this week.", l: [] }
+]},
+10: { topic: "Node.js + npm", ms: "CLI todo tool in Node", days: [
+  { t: "What Node is", g: "You can run JS outside the browser and explain the difference.", d: "Node = the same JS engine, but with file/network access and no DOM. Run node in the terminal, write a script, note what's missing (no document!) and what's new (require/process).", l: [["Node.js: intro", "https://nodejs.org/en/learn/getting-started/introduction-to-nodejs"]] },
+  { t: "npm + package.json", g: "You can init a project, install a package, and read package.json.", d: "npm init, installing dependencies, node_modules (and why it's gitignored), npm scripts. Install a small package (e.g. chalk) and use it — understanding this unlocks the whole JS ecosystem.", l: [["npm docs: About npm", "https://docs.npmjs.com/about-npm"]] },
+  { t: "Files + process.argv", g: "Your script can read/write files and take CLI arguments.", d: "fs.readFileSync/writeFileSync, JSON.parse/stringify to persist data, process.argv for arguments. Write a script that saves and reads a JSON file — that's a tiny database.", l: [["Node.js: fs docs", "https://nodejs.org/api/fs.html"]] },
+  { t: "Build: CLI todo (part 1)", g: "node todo.js add \"buy milk\" works.", d: "Start the CLI todo tool: add and list commands, todos persisted to todos.json. Same state logic as your browser Todo — different environment. Notice how much transfers.", l: [] },
+  { t: "Build: CLI todo (part 2)", g: "done and delete commands complete the tool.", d: "Finish the CLI: toggle done, delete by id, nice console output. Add npm scripts so npm run list works. Ask Cursor to review the code style.", l: [] },
+  { t: "Project Saturday: polish + README", g: "A stranger could install and use your CLI from the README alone.", d: "Error handling (bad ids, missing file), README with install/usage, push to GitHub. Week milestone done: you're a Node developer now.", l: [] }
+]},
+11: { topic: "HTTP + Express basics", ms: "First API: GET/POST todos", days: [
+  { t: "HTTP anatomy", g: "You can dissect any request: method, path, headers, body, status.", d: "Methods (GET/POST/PUT/DELETE), status code families (2xx/4xx/5xx), headers. You've been USING HTTP via fetch for weeks — today you learn to read it fluently.", l: [["MDN: HTTP overview", "https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview"]] },
+  { t: "Express hello world", g: "A server you wrote responds to your browser.", d: "npm install express, app.get('/', ...), app.listen. Run it, hit localhost:3000, change the response, restart, repeat. The magic moment: you're on both sides of HTTP now.", l: [["Express: Hello world", "https://expressjs.com/en/starter/hello-world.html"]] },
+  { t: "Routing + params", g: "You can read route params and query strings.", d: "app.get('/todos/:id'), req.params, req.query. Build a few practice routes returning JSON. Test with the browser and curl — see the raw responses.", l: [["Express: Routing", "https://expressjs.com/en/guide/routing.html"]] },
+  { t: "GET + POST todos", g: "Your API serves and accepts todos as JSON.", d: "express.json() middleware, GET /todos returns the array, POST /todos adds one (in memory for now). Test POST with curl or a REST client. This is your first real API.", l: [["MDN: JSON intro", "https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/JSON"]] },
+  { t: "PUT + DELETE, REST conventions", g: "Full CRUD over HTTP with proper status codes.", d: "PUT /todos/:id toggles, DELETE removes, 404 for missing ids, 201 for created. REST conventions make your API predictable to any developer (and any AI) who reads it.", l: [["MDN: REST glossary", "https://developer.mozilla.org/en-US/docs/Glossary/REST"]] },
+  { t: "Project Saturday: connect frontend to API", g: "Your browser Todo talks to YOUR server instead of localStorage.", d: "Swap the Todo frontend's localStorage for fetch calls to your Express API. Full stack, end to end, all yours. Push both, update the README with a request-flow diagram.", l: [] }
+]},
+12: { topic: "Middleware + validation", ms: "Robust todo API", days: [
+  { t: "Middleware concept", g: "You can trace a request through the middleware chain.", d: "Functions that run in order on every request: logging, parsing, auth (next week). Write a logger middleware that prints method + path + duration. next() is the baton pass.", l: [["Express: Using middleware", "https://expressjs.com/en/guide/using-middleware.html"]] },
+  { t: "Custom middleware practice", g: "You can write and order middlewares deliberately.", d: "Build: request-timing middleware, a fake API-key check, a 404 catch-all. Order matters — experiment with wrong orders and watch what breaks. This mental model carries to Next.js later.", l: [["Express: Writing middleware", "https://expressjs.com/en/guide/writing-middleware.html"]] },
+  { t: "Validation with zod", g: "Bad input gets a clean 400, never a crash.", d: "npm install zod, define a TodoSchema, safeParse incoming bodies. Never trust client input — validation at the boundary is a security AND correctness practice.", l: [["Zod docs", "https://zod.dev"]] },
+  { t: "Error handling middleware", g: "One place catches every error and shapes the response.", d: "Express error middleware (err, req, res, next), consistent error JSON shape, a thrown error anywhere → clean 500. Test by throwing deliberately in a route.", l: [["Express: Error handling", "https://expressjs.com/en/guide/error-handling.html"]] },
+  { t: "Structure: routes + controllers", g: "Your API is organized like a real codebase.", d: "Split into routes/, controllers/, middleware/ folders. Same lesson as Week 7 (separation of concerns), now on the server. Ask Cursor to critique your structure.", l: [] },
+  { t: "Project Saturday: robust API day", g: "Your API survives every weird input you can throw at it.", d: "Attack your own API: missing fields, wrong types, huge strings, bad ids. Fix every crash or wrong status code. Write down 3 things you fixed — that's your log entry.", l: [] }
+]},
+13: { topic: "Auth — JWT, cookies, hashing", ms: "Signup/login working (platform capability: auth)", days: [
+  { t: "How auth works", g: "You can explain hashing vs encryption and sessions vs tokens.", d: "Why passwords are NEVER stored raw (bcrypt hashing), what a session is, what a JWT is (signed claims, readable but tamper-proof). Concepts today, code tomorrow.", l: [["JWT intro", "https://jwt.io/introduction"], ["OWASP: Password storage", "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"]] },
+  { t: "Signup with bcrypt", g: "POST /signup stores a user with a hashed password.", d: "npm install bcrypt, hash on signup, verify with bcrypt.compare. Log a hash and look at it — same password, different hash each time (salting). Zod-validate email + password rules.", l: [["bcrypt on npm", "https://www.npmjs.com/package/bcrypt"]] },
+  { t: "Login + JWT", g: "POST /login returns a signed token.", d: "jsonwebtoken: sign {userId} with a secret, expiry ~1h. The secret goes in an environment variable, never in code. Decode your token at jwt.io and read the claims.", l: [["jsonwebtoken on npm", "https://www.npmjs.com/package/jsonwebtoken"]] },
+  { t: "Auth middleware", g: "Routes reject requests without a valid token.", d: "Middleware reads Authorization: Bearer, verifies the JWT, attaches req.userId, else 401. Protect the todo routes. This exact pattern guards every API you'll ever ship.", l: [] },
+  { t: "Per-user todos + security basics", g: "Users only ever see their own todos.", d: "Filter every query by req.userId. Then read about cookies vs headers for token storage and XSS basics — enough to make sensible choices, not paranoia.", l: [["OWASP: Auth cheatsheet", "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"]] },
+  { t: "Project Saturday: auth end to end", g: "Signup → login → authorized todo operations, from the frontend.", d: "Wire the frontend: signup/login forms, store the token, send it on every request, handle 401 by showing the login form. Milestone: auth is a capability you now own.", l: [] }
+]},
+14: { topic: "MongoDB + Mongoose", ms: "Todos persist in Mongo", days: [
+  { t: "What Mongo is + Atlas setup", g: "A free cloud database you can connect to.", d: "Document databases store JSON-like docs. Create a free MongoDB Atlas cluster, get the connection string (into an env var!), connect with the driver, insert one test doc.", l: [["MongoDB: Getting started", "https://www.mongodb.com/docs/atlas/getting-started/"]] },
+  { t: "Mongoose models", g: "Schemas defined for User and Todo.", d: "npm install mongoose, connect, define schemas with types/required/defaults. A schema is your data contract — same idea as your zod schemas, but at the database layer.", l: [["Mongoose: Getting started", "https://mongoosejs.com/docs/index.html"]] },
+  { t: "CRUD with Mongoose", g: "create, find, findByIdAndUpdate, findByIdAndDelete — fluent.", d: "Practice each in a scratch script before touching the API. Log results, inspect _id, try to fetch a missing id and see what returns (null, not an error — handle it).", l: [["Mongoose: Queries", "https://mongoosejs.com/docs/queries.html"]] },
+  { t: "Wire the API to Mongo", g: "Your todo API survives a server restart.", d: "Replace the in-memory array with Mongoose calls (they're async — await everything). Restart the server; todos persist. That's the whole point of a database.", l: [] },
+  { t: "Relations: user → todos", g: "Todos reference their owner; queries filter by it.", d: "Store userId (ObjectId ref) on each todo, query with .find({ userId }). Populate is nice-to-know. Relations are where document DBs get awkward — remember that for tomorrow's contrast.", l: [["Mongoose: Populate", "https://mongoosejs.com/docs/populate.html"]] },
+  { t: "Project Saturday: fullstack test", g: "Two users, isolated data, everything persisted.", d: "Create two accounts, add todos as each, verify isolation. Fix anything leaky. Update the README's architecture diagram to include Mongo.", l: [] }
+]},
+15: { topic: "PostgreSQL + Prisma", ms: "Project 1 fullstack done · Mom Test read", days: [
+  { t: "Relational thinking + SQL basics", g: "You can write SELECT/INSERT/WHERE by hand.", d: "Tables, rows, columns, primary/foreign keys. Do SQLBolt lessons 1–6 in the browser. Relational databases run the business world — and most of AEC data too.", l: [["SQLBolt (interactive)", "https://sqlbolt.com"]] },
+  { t: "SQL joins", g: "You can join users to todos in raw SQL.", d: "SQLBolt lessons 7–12: JOIN, aggregate functions, GROUP BY. Joins are THE relational superpower — exactly what was awkward in Mongo yesterday.", l: [["SQLBolt: Joins", "https://sqlbolt.com/lesson/select_queries_with_joins"]] },
+  { t: "Prisma setup", g: "A Prisma schema with User and Todo models, migrated to Neon.", d: "Create a free Neon Postgres, install Prisma, define models with a relation, run prisma migrate dev. Look at the generated SQL — Prisma writes what you learned yesterday.", l: [["Prisma: Getting started", "https://www.prisma.io/docs/getting-started"], ["Neon docs", "https://neon.tech/docs/introduction"]] },
+  { t: "Migrate the API to Prisma", g: "The todo API runs on Postgres.", d: "Swap Mongoose calls for prisma.todo.findMany etc. Notice the type-safety hints even in JS. Keep the Mongo version on a git branch — comparing both is the lesson.", l: [["Prisma: CRUD", "https://www.prisma.io/docs/orm/prisma-client/queries/crud"]] },
+  { t: "Mongo vs Postgres retrospective", g: "You can argue when to choose each, from experience.", d: "Write 10 sentences comparing them (schema flexibility vs relations, queries, migrations). Finish Project 1: run the full definition-of-done checklist in the Projects tab.", l: [] },
+  { t: "Project Saturday: Project 1 audit + Mom Test", g: "Project 1 CLOSED. The Mom Test finished.", d: "Whiteboard the full request flow to Cursor without notes (browser → API → DB → back). Finish reading The Mom Test (founder milestone due today) and write 5 takeaway rules in problem-log.md.", l: [] }
+]},
+16: { topic: "TypeScript basics", ms: "Typed exercises complete", days: [
+  { t: "Why TS + setup", g: "A .ts file compiles and catches your first type error.", d: "TypeScript = JS + a type checker that catches bugs before running. Install typescript, write a typed function, break it on purpose, read the error. Errors are the product — learn to read them.", l: [["TS Handbook: Intro", "https://www.typescriptlang.org/docs/handbook/intro.html"]] },
+  { t: "Everyday types", g: "You can type variables, arrays, objects and functions.", d: "string/number/boolean, arrays, object types, optional properties, union types. Type your Week 4 beam objects — your own domain is the best practice material.", l: [["TS: Everyday types", "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html"]] },
+  { t: "Interfaces + type aliases", g: "You can model your domain precisely.", d: "interface vs type, extending, literal types ('beam' | 'column' | 'slab'). Model an AEC element hierarchy. Precise types are documentation that can't go stale.", l: [["TS: Object types", "https://www.typescriptlang.org/docs/handbook/2/objects.html"]] },
+  { t: "Narrowing", g: "You can handle union types safely with type guards.", d: "typeof/in checks, discriminated unions (the pattern behind every API response type). Write a function handling {status:'ok', data} | {status:'error', message} — you'll use this shape forever.", l: [["TS: Narrowing", "https://www.typescriptlang.org/docs/handbook/2/narrowing.html"]] },
+  { t: "Generics intro", g: "You can read Array<T> and write one simple generic function.", d: "Generics = type parameters. Don't over-invest: today you need to READ them fluently (every library uses them) and write a basic firstItem<T>(arr: T[]).", l: [["TS: Generics", "https://www.typescriptlang.org/docs/handbook/2/generics.html"]] },
+  { t: "Project Saturday: type a real module", g: "Your Week 7 state.js fully typed as state.ts.", d: "Port it: Todo interface, typed functions, zero any. Feel how types document intent. Ask Cursor to review the types — accept or argue every suggestion.", l: [] }
+]},
+17: { topic: "TypeScript in practice", ms: "Todo API migrated to TS", days: [
+  { t: "Project setup: tsconfig", g: "A Node+TS project that builds and runs.", d: "tsconfig.json essentials (strict: true always), tsx/ts-node for development, build scripts. Boring but foundational — every future project starts like this.", l: [["TS: tsconfig reference", "https://www.typescriptlang.org/tsconfig/"]] },
+  { t: "Typing Express", g: "req/res/next fully typed, custom types for req.userId.", d: "npm i -D @types/express, type route handlers, extend the Request type for your auth middleware. @types packages are how the ecosystem shares types.", l: [["Express + TS guide", "https://blog.logrocket.com/how-to-set-up-node-typescript-express/"]] },
+  { t: "Migrate the API (part 1)", g: "Routes and controllers compile in strict mode.", d: "Rename to .ts, fix errors file by file. The compiler is your migration checklist — every red squiggle is a latent bug found. Don't silence with any; fix properly.", l: [] },
+  { t: "Migrate the API (part 2)", g: "The whole API runs in TS with zero any.", d: "Finish: middleware, Prisma calls (notice Prisma's generated types!), the JWT payload type. Prisma + TS is the killer combo: schema changes ripple to compile errors everywhere.", l: [["Prisma: types", "https://www.prisma.io/docs/orm/prisma-client/type-safety"]] },
+  { t: "zod + TS inference", g: "One schema, two jobs: runtime validation AND static types.", d: "z.infer<typeof TodoSchema> derives the TS type from the zod schema — single source of truth. Refactor your validation this way; this pattern is standard in serious codebases.", l: [["Zod: Type inference", "https://zod.dev/?id=type-inference"]] },
+  { t: "Project Saturday: migration retrospective", g: "README section: what TS caught, what it cost.", d: "List actual bugs the compiler found during migration. Push everything. From today, ALL new code is TypeScript — no exceptions.", l: [] }
+]},
+18: { topic: "React fundamentals", ms: "Stateful components working", days: [
+  { t: "Thinking in components", g: "A Vite React app runs and you understand the file layout.", d: "npm create vite@latest, React = UI as a function of state (you built this manually in Week 5 — renderTodos() WAS a component). Read 'Your first component', poke everything.", l: [["react.dev: First component", "https://react.dev/learn/your-first-component"]] },
+  { t: "JSX + props", g: "You can compose components and pass data down.", d: "JSX rules (className, expressions in braces), props as function parameters. Build ProjectCard and render 3 with different props. Components = Grasshopper clusters with inputs.", l: [["react.dev: Passing props", "https://react.dev/learn/passing-props-to-a-component"]] },
+  { t: "State: useState", g: "Clicking updates the UI without you touching the DOM.", d: "const [count, setCount] = useState(0). The re-render loop: state changes → React re-renders → UI matches data. You hand-built this in Week 5; now React does it. Build a counter and a toggle.", l: [["react.dev: State", "https://react.dev/learn/state-a-components-memory"]] },
+  { t: "Events + conditional rendering", g: "UI branches on state: show/hide, enable/disable.", d: "onClick/onChange handlers, ternaries and && in JSX, lifting state up when two components share it. Build a small form with visible validation state.", l: [["react.dev: Responding to events", "https://react.dev/learn/responding-to-events"], ["react.dev: Conditional rendering", "https://react.dev/learn/conditional-rendering"]] },
+  { t: "Build day: stateful components", g: "Three small components built from scratch, no copying.", d: "An accumulator counter, a character-counting input, a collapsible panel. Small reps build the muscle. Predict each re-render before clicking.", l: [] },
+  { t: "Project Saturday: interactive card list", g: "A filterable list of your AEC projects in React.", d: "Cards from an array (map), a search input filtering live, a 'show archived' toggle. Everything you did in Weeks 5–6 with the DOM, redone the React way — feel the difference.", l: [["react.dev: Rendering lists", "https://react.dev/learn/rendering-lists"]] }
+]},
+19: { topic: "React — effects, lists, forms", ms: "Todo in React · founder: 15+ problems logged", days: [
+  { t: "Lists + keys", g: "You render dynamic lists without key warnings and know why keys matter.", d: "map to JSX arrays, stable keys (never array index for mutable lists — watch what breaks if you do). Keys are how React tracks identity across re-renders.", l: [["react.dev: Rendering lists", "https://react.dev/learn/rendering-lists"]] },
+  { t: "Controlled forms", g: "Form inputs whose single source of truth is React state.", d: "value + onChange, form submission, multi-field forms as one state object. Controlled inputs feel backwards at first — push through, it's the standard pattern.", l: [["react.dev: Reacting to input", "https://react.dev/learn/reacting-to-input-with-state"]] },
+  { t: "useEffect", g: "You can synchronize with external systems — and know when NOT to use it.", d: "Effects run after render: fetch on mount, sync to localStorage, cleanup. Read 'You might not need an effect' too — overusing effects is the #1 React beginner smell.", l: [["react.dev: Synchronizing with effects", "https://react.dev/learn/synchronizing-with-effects"], ["react.dev: You might not need an effect", "https://react.dev/learn/you-might-not-need-an-effect"]] },
+  { t: "React Todo (part 1)", g: "Add/delete/toggle working in React.", d: "Rebuild the Todo app: todos in state, TodoList/TodoItem/AddForm components. Compare mentally with your Week 6 vanilla version — same data flow, React handles the DOM.", l: [] },
+  { t: "React Todo (part 2) + persistence", g: "Todos persist via localStorage effect.", d: "useEffect to save on change, lazy initial state to load. Then a filter row (all/active/done) — derived state, not duplicated state. Founder check: 15+ problems logged by end of Nov.", l: [] },
+  { t: "Project Saturday: polish + deploy", g: "React Todo live on the internet.", d: "Edge cases, empty states, deploy to Vercel or GitHub Pages. Compare the vanilla and React versions in your README — write which parts React made easier and which it made heavier.", l: [] }
+]},
+20: { topic: "React — router, context, hooks", ms: "Multi-page app with auth state", days: [
+  { t: "React Router", g: "Multiple pages without page reloads.", d: "npm i react-router, routes, Link, useParams for detail pages. Client-side routing = swap components on URL change. Build Home/About/Projects pages.", l: [["React Router docs", "https://reactrouter.com"]] },
+  { t: "Route params + layouts", g: "A project list page linking to /projects/:id detail pages.", d: "Dynamic segments, shared layout with nav, a 404 route. This list→detail pattern is in every app you'll ever build — ModelHub included.", l: [["React Router: routing", "https://reactrouter.com/start/framework/routing"]] },
+  { t: "Context", g: "State shared app-wide without prop drilling.", d: "createContext + useContext for theme or current user. Context is for rarely-changing global data — don't put everything in it. Build a theme switcher to practice.", l: [["react.dev: Context", "https://react.dev/learn/passing-data-deeply-with-context"]] },
+  { t: "Custom hooks", g: "You can extract reusable logic into useSomething().", d: "Write useLocalStorage(key) and reuse it in the Todo. Custom hooks = closures + composition (Week 7 paying off). This is how React code stays clean at scale.", l: [["react.dev: Custom hooks", "https://react.dev/learn/reusing-logic-with-custom-hooks"]] },
+  { t: "Auth state with context", g: "Login/logout UI backed by your Week 13 API.", d: "AuthContext holding user + token, login form calling YOUR Express API, protected routes redirecting to login. Your backend and frontend knowledge click together today.", l: [] },
+  { t: "Project Saturday: multi-page app complete", g: "Milestone: routed, authed React app.", d: "Tie it together: nav with login state, protected /todos page, logout. Deploy. This app shape — auth + routes + API — is the skeleton of every SaaS.", l: [] }
+]},
+21: { topic: "Data fetching + SpecSense start", ms: "Project 2: SpecSense — first LLM call", days: [
+  { t: "Fetching in React", g: "Loading/error/data states handled without a library.", d: "The manual pattern: three states, fetch in effect, cleanup for race conditions. Feel the boilerplate pain — that's WHY TanStack Query exists (tomorrow).", l: [["react.dev: Fetching data", "https://react.dev/learn/synchronizing-with-effects#fetching-data"]] },
+  { t: "TanStack Query", g: "useQuery replaces your manual fetch state machine.", d: "QueryClient, useQuery(key, fn), automatic caching/refetching/devtools. Refactor yesterday's fetch. The rule: server state belongs to Query, UI state to useState.", l: [["TanStack Query: Overview", "https://tanstack.com/query/latest/docs/framework/react/overview"]] },
+  { t: "Mutations", g: "Create/update/delete with automatic cache invalidation.", d: "useMutation + invalidateQueries. Wire the React Todo to your Express API entirely through Query. Optimistic updates: read about them, use them sparingly.", l: [["TanStack Query: Mutations", "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"]] },
+  { t: "SpecSense start: first LLM call", g: "Your code sends a prompt and renders the response.", d: "Project 2 begins. Get an OpenAI API key (spend limit ON), call chat completions from a small Express endpoint (never expose keys in the browser!), render the reply in React.", l: [["OpenAI: Quickstart", "https://platform.openai.com/docs/quickstart"]] },
+  { t: "Structured outputs", g: "The LLM returns JSON matching YOUR schema, guaranteed.", d: "JSON-schema response format: define the spec-requirement shape (discipline, property, requirement, unit, value, source clause, confidence). Structured outputs = the difference between a toy and a product.", l: [["OpenAI: Structured outputs", "https://platform.openai.com/docs/guides/structured-outputs"]] },
+  { t: "Project Saturday: SpecSense v0", g: "Paste spec text → structured requirements table.", d: "Wire it end to end: textarea → API → schema-constrained extraction → React table. Test with a real spec excerpt from your archive. Milestone: your first AI product exists.", l: [] }
+]},
+22: { topic: "Tailwind CSS", ms: "SpecSense restyled + CSV export", days: [
+  { t: "Utility-first mindset", g: "Tailwind set up; you can style without leaving JSX.", d: "Install in the Vite project. Utilities = inline-adjacent classes with a design system built in. It feels wrong for a day, then you never go back. Restyle one component.", l: [["Tailwind: Installation", "https://tailwindcss.com/docs/installation"], ["Tailwind: Utility-first", "https://tailwindcss.com/docs/styling-with-utility-classes"]] },
+  { t: "Layout + spacing", g: "Flex/grid/spacing utilities fluent.", d: "flex, grid, gap-4, p-6, max-w-4xl mx-auto — the utilities map 1:1 to the CSS you learned in Weeks 2–3, which is why you learned CSS first. Rebuild a card layout.", l: [["Tailwind: Flexbox & grid docs", "https://tailwindcss.com/docs/flex"]] },
+  { t: "Responsive + states", g: "md:/lg: breakpoints and hover:/focus: states in use.", d: "Mobile-first prefixes and state variants. Make SpecSense's layout responsive and give every interactive element a hover state. Dark mode: read how, apply if time allows.", l: [["Tailwind: Responsive design", "https://tailwindcss.com/docs/responsive-design"]] },
+  { t: "Component patterns", g: "Repeated utility strings extracted into React components.", d: "The Tailwind way: reuse via components (Button, Card, Badge), not CSS classes. Build a tiny UI kit for SpecSense — seeds of the design system your product suite will share.", l: [["Tailwind: Reusing styles", "https://tailwindcss.com/docs/reusing-styles"]] },
+  { t: "Restyle SpecSense", g: "SpecSense looks like a credible B2B product.", d: "Full pass: clean table, confidence badges (color-coded), loading skeleton, empty state. B2B buyers trust polish. Screenshot before/after for your log.", l: [] },
+  { t: "Project Saturday: CSV export + ship", g: "Extracted requirements download as CSV.", d: "Build the CSV export (client-side blob, like this dashboard's progress export), handle nonsense input gracefully, deploy. Tick SpecSense checklist items in the Projects tab.", l: [] }
+]},
+23: { topic: "Next.js foundations", ms: "Portfolio ported to Next.js", days: [
+  { t: "Why Next + setup", g: "A create-next-app project runs and you know what Next adds.", d: "Server rendering, file-based routing, API routes, image/font optimization — React with the production concerns solved. Start the official Learn course today.", l: [["Next.js Learn course", "https://nextjs.org/learn"]] },
+  { t: "App router: pages + layouts", g: "Routes from folders; shared layouts that persist.", d: "app/page.tsx, nested layouts, loading.tsx, Link navigation. File-based routing replaces React Router config — folders ARE the routes.", l: [["Next: Layouts and pages", "https://nextjs.org/docs/app/getting-started/layouts-and-pages"]] },
+  { t: "Server vs client components", g: "You know where code runs and can choose deliberately.", d: "Server components (default): data access, zero JS shipped. Client components ('use client'): interactivity. The #1 Next.js mental model — read carefully, experiment, break it.", l: [["Next: Server & client components", "https://nextjs.org/docs/app/getting-started/server-and-client-components"]] },
+  { t: "Data fetching in server components", g: "async components that fetch directly — no useEffect.", d: "await fetch(...) right inside the component, caching behavior, when to still use TanStack Query (client-side interactivity). Compare with the Week 21 patterns.", l: [["Next: Fetching data", "https://nextjs.org/docs/app/getting-started/fetching-data"]] },
+  { t: "Port the portfolio (part 1)", g: "Your portfolio content lives in a Next app with proper routes.", d: "Pages for home/projects/contact, a projects data file rendered server-side, Tailwind styling carried over. Notice how much less client JS ships.", l: [] },
+  { t: "Project Saturday: portfolio on Vercel", g: "Portfolio live on Vercel with a real build pipeline.", d: "Push to GitHub, import in Vercel, automatic deploys on push. Add metadata (title/description per page). Your professional front door is now a modern app.", l: [["Vercel: Deploying", "https://vercel.com/docs/deployments"]] }
+]},
+24: { topic: "Holiday buffer / catch-up", ms: "Backlog cleared — rest earned", days: [
+  { t: "Backlog triage", g: "An honest list of everything unfinished from Weeks 18–23.", d: "Go through the Plan tab checkboxes and Projects tab checklists. List what's genuinely undone vs perfectionism. Pick the 3 highest-value items for this week.", l: [] },
+  { t: "Catch-up build day 1", g: "Backlog item #1 closed.", d: "Work the most important unfinished item. If everything is truly done, deepen instead: add one feature to SpecSense you wished it had.", l: [] },
+  { t: "Catch-up build day 2", g: "Backlog item #2 closed.", d: "Continue. If ahead: read one long-form engineering article (e.g. on how React actually reconciles) purely out of curiosity.", l: [] },
+  { t: "Review quiz: Weeks 18–23", g: "Gaps in React/Next knowledge identified and patched.", d: "Ask Cursor for a 20-question quiz across React, TS, Tailwind, Next. Score honestly. Re-study the two weakest topics with the original resources.", l: [] },
+  { t: "Founder track afternoon", g: "problem-log.md reviewed and rescored.", d: "Holiday week = quiet time for the founder track: re-read all logged problems, apply the scoring rubric, note which 2–3 keep rising. Draft January's Mom Test conversation targets.", l: [] },
+  { t: "Rest", g: "Actually rest.", d: "No code today. The plan survives a day off; burnout doesn't. Optional: tidy your GitHub profile README — 5 minutes, then close the laptop.", l: [] }
+]},
+25: { topic: "Next.js fullstack", ms: "Fullstack Next app with login", days: [
+  { t: "Route handlers", g: "API endpoints inside your Next app.", d: "app/api/*/route.ts with GET/POST exports — Express knowledge maps straight over (request in, response out). Build a small JSON endpoint and call it from a page.", l: [["Next: Route handlers", "https://nextjs.org/docs/app/building-your-application/routing/route-handlers"]] },
+  { t: "Server actions", g: "Forms that mutate data without hand-written fetch calls.", d: "'use server' functions called from forms/buttons, revalidatePath for cache refresh. The modern Next mutation path — compare with route handlers and know when each fits.", l: [["Next: Server actions", "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations"]] },
+  { t: "Auth in Next: options", g: "Auth.js (or better-auth) wired with a credentials provider.", d: "Survey the options (Auth.js, better-auth, roll-your-own JWT — you understand all three now thanks to Week 13). Pick one, follow its Next quickstart, get session reading working.", l: [["Auth.js docs", "https://authjs.dev"]] },
+  { t: "Login flow", g: "Signup + login + session-aware pages.", d: "Login form, session in server components (redirect if absent), logout. Notice how much Week 13 concepts transfer: hashing, sessions, tokens — the library just packages them.", l: [] },
+  { t: "Protected routes + middleware", g: "Whole route groups gated by auth middleware.", d: "middleware.ts for route protection, role checks in server components. Sketch how orgs/roles would work — that's capstone RBAC groundwork.", l: [["Next: Middleware", "https://nextjs.org/docs/app/building-your-application/routing/middleware"]] },
+  { t: "Project Saturday: fullstack Next milestone", g: "A deployed Next app with working auth + one CRUD resource.", d: "Todos again (fast this time — 4th implementation!) or notes: full CRUD via server actions, per-user data, deployed to Vercel. The complete modern stack, end to end.", l: [] }
+]},
+26: { topic: "Deploy + ModelHub start", ms: "Project 3 start: ModelHub", days: [
+  { t: "Env vars + production config", g: "Secrets managed properly across local and Vercel.", d: ".env.local, Vercel env settings, NEXT_PUBLIC_ prefix rules, never committing secrets. Audit all your repos for leaked keys today — better you find them than someone else.", l: [["Next: Environment variables", "https://nextjs.org/docs/app/building-your-application/configuring/environment-variables"]] },
+  { t: "Neon Postgres + Prisma in Next", g: "Database wired into the Next app, migrations running.", d: "Prisma in Next (singleton client pattern!), Neon connection, first migration. You did this in Week 15 for Express — same tools, new frame.", l: [["Prisma with Next.js", "https://www.prisma.io/docs/guides/nextjs"]] },
+  { t: "ModelHub: spec + schema", g: "Written one-pager and Prisma schema for ModelHub.", d: "Project 3 starts. Define: Model (file metadata), Element (extracted data), Job (processing records — the architecture rule). Write the spec BEFORE code: scope, non-goals, data flow.", l: [] },
+  { t: "Upload UI", g: "A file lands on your server and its metadata in Postgres.", d: "File input → route handler → store file + create Model row. Validate type and size (OWASP checklist: never trust filenames). Local disk for now; S3 comes Week 32.", l: [["OWASP: File upload cheatsheet", "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html"]] },
+  { t: "IFC parsing intro", g: "web-ifc opens an IFC file in Node and lists element types.", d: "npm i web-ifc, load a sample IFC (get one from buildingSMART samples), iterate elements, log types/counts. Your BIM knowledge meets your code — enjoy this one.", l: [["web-ifc repo", "https://github.com/ThatOpen/engine_web-ifc"], ["Sample IFC files", "https://github.com/buildingSMART/Sample-Test-Files"]] },
+  { t: "Project Saturday: ModelHub skeleton", g: "Upload → parse → element count shown, deployed.", d: "Wire the pipeline minimally: upload triggers parse, elements counted per type, shown in the UI, job record written. Ugly is fine; end-to-end is the goal.", l: [] }
+]},
+27: { topic: "ModelHub build week", ms: "v1: upload, parse, filter, export · founder: 5+ talks", days: [
+  { t: "Extract elements to Postgres", g: "Parsed IFC elements land as Element rows.", d: "For each element: GlobalId, type, name, key properties into Postgres (JSONB column for flexible properties). Batch insert for speed. Write the job record at every step.", l: [["Prisma: JSON fields", "https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types/working-with-json-fields"]] },
+  { t: "Dashboard: table + filters", g: "Elements browsable, filterable by type/property.", d: "Server component fetches with filters from searchParams; filter UI updates the URL. URL-as-state = shareable filtered views — a B2B-user favorite.", l: [["Next: searchParams", "https://nextjs.org/docs/app/api-reference/file-conventions/page"]] },
+  { t: "Aggregations", g: "Counts and sums by element type — the QA view.", d: "Prisma groupBy (or raw SQL — you know it from Week 15): elements per type, per storey. This is what a BIM manager actually wants to see first.", l: [["Prisma: Aggregations", "https://www.prisma.io/docs/orm/prisma-client/queries/aggregation-grouping-summarizing"]] },
+  { t: "CSV export", g: "Filtered element data downloads as CSV.", d: "Route handler streams CSV of the current filter set. Excel is the universal AEC interface — every consulting client will ask for this exact button.", l: [] },
+  { t: "Polish + bug hunt", g: "ModelHub v1 survives your own adversarial testing.", d: "Upload weird files, huge files, duplicate uploads. Fix crashes, add friendly errors, empty states. Check the job records tell the story of every upload.", l: [] },
+  { t: "Project Saturday: ModelHub v1 demo", g: "Milestone: a recorded 2-minute demo.", d: "Record a walkthrough (upload → browse → filter → export). Send it to one AEC friend for reactions. Founder milestone check: 5+ Mom Test conversations by end of January.", l: [] }
+]},
+28: { topic: "LLM APIs deeply", ms: "CLI + API-route chatbot", days: [
+  { t: "How LLMs actually work", g: "You can explain tokens, context windows and temperature.", d: "Tokens (cost + limits), context windows, temperature/top-p, system vs user messages. Count tokens on real prompts with the tokenizer tool — pricing intuition matters for products.", l: [["OpenAI: Concepts", "https://platform.openai.com/docs/concepts"], ["Tokenizer tool", "https://platform.openai.com/tokenizer"]] },
+  { t: "Chat completions + system prompts", g: "A system prompt that reliably shapes behavior.", d: "Build a CLI chat loop in Node (readline + API). Experiment: same question, different system prompts (a BIM manager, a structural reviewer, a terse assistant). Prompt design = product design.", l: [["OpenAI: Text generation", "https://platform.openai.com/docs/guides/text-generation"]] },
+  { t: "Streaming", g: "Tokens render as they arrive, not after.", d: "stream: true, iterate chunks in Node, then stream through a Next route handler to the browser. Streaming is UX table stakes for AI products — users abandon spinners.", l: [["OpenAI: Streaming", "https://platform.openai.com/docs/guides/streaming-responses"]] },
+  { t: "Conversation memory + cost control", g: "Multi-turn chat with a token budget.", d: "Keep message history, trim old turns when near the budget, track cost per conversation. Naive history = runaway bills. Log token usage per request.", l: [] },
+  { t: "API-route chatbot", g: "A chat UI in your Next app, streaming, with history.", d: "Bring it together: chat page, streaming route handler, conversation state. Style it with Tailwind. This chassis becomes SpecSense's interactive mode later if you want it.", l: [] },
+  { t: "Project Saturday: prompt engineering practice", g: "A prompt library for your AEC domain.", d: "Build 5 tested prompts: spec summarizer, element classifier, clash-report explainer, meeting-notes extractor, schedule sanity-checker. Save with example inputs/outputs — consulting assets.", l: [] }
+]},
+29: { topic: "AI SDK + RAG", ms: "Streaming chat + spec-PDF mini-RAG", days: [
+  { t: "Vercel AI SDK", g: "streamText + useChat replace your hand-rolled streaming.", d: "The AI SDK abstracts providers and streaming plumbing. Rebuild yesterday's chatbot in ~50 lines. Compare — you understand what it abstracts because you built it manually first.", l: [["AI SDK: Getting started", "https://ai-sdk.dev/docs/getting-started/nextjs-app-router"]] },
+  { t: "Embeddings", g: "You can turn text into vectors and measure similarity.", d: "embed() on sentences, cosine similarity between AEC sentences ('fire rating of walls' vs 'wall REI requirement' — high similarity, different words). This is semantic search's engine.", l: [["AI SDK: Embeddings", "https://ai-sdk.dev/docs/ai-sdk-core/embeddings"]] },
+  { t: "Chunking + retrieval", g: "A spec document chunked, embedded, and searchable.", d: "Split a real spec into chunks (paragraph-ish, with overlap), embed all, store vectors (in-memory or pgvector), top-k retrieval by similarity. Retrieval quality > model quality — chunking is where RAG wins or dies.", l: [["pgvector repo", "https://github.com/pgvector/pgvector"]] },
+  { t: "RAG: answer with sources", g: "Questions answered FROM the document, with citations.", d: "Retrieve top chunks → inject into the prompt → instruct 'answer only from context, cite the clause'. Test with questions the doc can and can't answer — honest 'not found' is a feature.", l: [["AI SDK: RAG guide", "https://ai-sdk.dev/docs/guides/rag-chatbot"]] },
+  { t: "Spec-PDF mini-RAG", g: "Upload a spec PDF → ask questions → cited answers.", d: "PDF text extraction (pdf-parse), the full pipeline behind an upload UI. This + SpecSense's structured extraction = your document-intelligence wedge, working.", l: [] },
+  { t: "Project Saturday: RAG demo polish", g: "Milestone: a demo-able AI document tool.", d: "Streaming answers, source-chunk display, graceful failures. Record a 2-min demo. Founder note: show this to your Mom Test contacts — watch reactions, log them.", l: [] }
+]},
+30: { topic: "IFC on the web", ms: "3D viewer in ModelHub", days: [
+  { t: "IFC + openBIM refresher", g: "You can explain IFC's entity model to a developer.", d: "IFC as ISO standard: entities, property sets, spatial structure, GlobalIds. You know this from practice — today map it to what you saw in web-ifc's output in Week 26. Skim the buildingSMART docs with developer eyes.", l: [["buildingSMART: IFC", "https://www.buildingsmart.org/standards/bsi-standards/industry-foundation-classes/"]] },
+  { t: "That Open components setup", g: "A minimal 3D scene running in the browser.", d: "@thatopen/components: world, camera, renderer, grids. Follow the docs tutorial exactly first, then poke. This ecosystem is open-source BIM's front line — worth knowing its structure.", l: [["That Open docs", "https://docs.thatopen.com"]] },
+  { t: "Load + render IFC", g: "Your sample IFC spinning in the browser.", d: "IfcLoader → fragments → scene. Load your Week 26 test file. Understand the fragment concept: viewer-optimized derivatives of IFC (remember the architecture rule — derivatives are disposable).", l: [["That Open: IfcLoader tutorial", "https://docs.thatopen.com/Tutorials/Components/Core/IfcLoader"]] },
+  { t: "Selection + properties", g: "Click an element → see its properties.", d: "Raycasting/highlighting, reading property sets from the clicked element. This is the interaction BIM users expect within 5 seconds of seeing a viewer.", l: [["That Open: Highlighter", "https://docs.thatopen.com/Tutorials/Components/Front/Highlighter"]] },
+  { t: "Integrate into ModelHub", g: "A Viewer tab on each uploaded model.", d: "The viewer is a client component ('use client' — Three.js needs the browser). Wire model selection → viewer loads that file. Element click → properties panel from your Postgres data.", l: [] },
+  { t: "Project Saturday: viewer demo", g: "Milestone: upload → browse data → view in 3D.", d: "Smooth the flow, add loading states for big models, record the updated demo. ModelHub is now visibly a BIM product, not a generic table app.", l: [] }
+]},
+31: { topic: "Speckle + APS · capstone decision", ms: "Speckle sync · PICK CAPSTONE PROBLEM", days: [
+  { t: "Speckle concepts", g: "Projects/models/versions understood; a model sent from the web UI.", d: "Speckle = git-ish collaboration for AEC data. Make a free account, explore a sample project, understand objects and versioning. Read the dev docs intro.", l: [["Speckle docs", "https://speckle.guide/"], ["Speckle developer docs", "https://speckle.guide/dev/"]] },
+  { t: "Speckle SDK", g: "Your code reads model data from Speckle's API.", d: "Personal access token, query a project's models/versions via the GraphQL API or SDK, traverse received objects. Notice the data shapes vs IFC — different philosophy, same domain.", l: [["Speckle: Server API", "https://speckle.guide/dev/server-graphql-api.html"]] },
+  { t: "ModelHub × Speckle", g: "Elements pullable from a Speckle model into ModelHub.", d: "Add 'import from Speckle' next to file upload: pick project/model → fetch objects → normalize into your Element table. Two data sources, one schema — integration architecture in miniature.", l: [] },
+  { t: "APS survey", g: "You know what Autodesk Platform Services offers and costs.", d: "Survey day, not build day: Model Derivative API, Viewer, ACC APIs, auth model, pricing. Write a one-page comparison: APS vs Speckle vs raw IFC — when would a client need which?", l: [["APS: Overview", "https://aps.autodesk.com/developer/overview"]] },
+  { t: "Integration writeup", g: "A published comparison note — consulting collateral.", d: "Polish the comparison into a short post (README or blog): the AEC interop landscape from a developer's seat. This exact document wins consulting conversations.", l: [] },
+  { t: "Project Saturday: PICK THE CAPSTONE PROBLEM", g: "THE founder decision: capstone problem chosen from the ranked list.", d: "The ritual: score every problem-log entry (pain × frequency × budget × your access × defensibility). Pick #1. Write the capstone one-pager: problem, user, wedge, why you. Weeks 37–42 build THIS.", l: [] }
+]},
+32: { topic: "File pipelines", ms: "ModelHub v2: async processing", days: [
+  { t: "Object storage (S3-compatible)", g: "Files upload to a bucket, not your server's disk.", d: "S3 concepts: buckets, keys, presigned URLs. Use Cloudflare R2 (free tier, S3-compatible). Presigned upload = browser uploads directly, your server never touches the bytes.", l: [["R2 docs", "https://developers.cloudflare.com/r2/"], ["S3 presigned URLs", "https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html"]] },
+  { t: "Queues + background jobs", g: "Work happens outside the request/response cycle.", d: "Why: IFC parsing takes minutes; HTTP times out. BullMQ + Redis (Upstash free tier): enqueue on upload, a worker processes. The request returns instantly with a job id.", l: [["BullMQ docs", "https://docs.bullmq.io"]] },
+  { t: "The worker", g: "A separate process parses IFC files from the queue.", d: "Worker pulls a job → downloads from R2 → parses with web-ifc → writes Elements + job status transitions (queued → processing → done/failed). Every step in the job record — the architecture rule, live.", l: [] },
+  { t: "WebSocket progress", g: "The browser shows live progress while the worker grinds.", d: "Socket.IO (or SSE — compare, choose, justify): worker publishes progress, UI subscribes by job id, progress bar fills. Live feedback transforms perceived quality.", l: [["Socket.IO docs", "https://socket.io/docs/v4/"]] },
+  { t: "Failure handling", g: "Failed jobs retry, then fail loudly and legibly.", d: "Retries with backoff, dead-letter handling, failure reasons surfaced in the UI. Test by making the worker crash mid-job. Pipelines are judged by their failure behavior.", l: [["BullMQ: Retrying jobs", "https://docs.bullmq.io/guide/retrying-failing-jobs"]] },
+  { t: "Project Saturday: ModelHub v2", g: "Milestone: production-shaped async pipeline.", d: "Full flow: presigned upload → queue → worker → websocket progress → dashboard refresh. Run the Projects-tab checklist including the TESTING GATE (Vitest + one Playwright E2E) — write those tests now.", l: [["Vitest guide", "https://vitest.dev/guide/"], ["Playwright intro", "https://playwright.dev/docs/intro"]] }
+]},
+33: { topic: "Linux, SSH, VPS", ms: "Node app running on your VPS", days: [
+  { t: "Command line fluency", g: "You navigate, pipe and permission-check without thinking.", d: "cd/ls/cat/grep/find, pipes, chmod, ps, tail -f. You've used the terminal for months; today make it deliberate. Do the Ubuntu CLI tutorial even if it feels easy.", l: [["Ubuntu: CLI for beginners", "https://ubuntu.com/tutorials/command-line-for-beginners"]] },
+  { t: "SSH + a VPS", g: "Key-based SSH into your own server.", d: "Rent the cheapest VPS (Hetzner ~€4/mo), generate an SSH key pair, log in, disable password auth. That remote shell is the same terminal you know — just someone else's computer.", l: [["DigitalOcean: SSH essentials", "https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys"]] },
+  { t: "Server setup", g: "Non-root user, firewall, updates — a hardened basic box.", d: "adduser + sudo, ufw allowing only SSH/HTTP/HTTPS, unattended upgrades. Follow the initial-server-setup guide exactly. Servers get scanned within minutes of existing — hygiene first.", l: [["DO: Initial server setup", "https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-22-04"]] },
+  { t: "Node on the server", g: "Your Express API responds from the VPS's IP.", d: "Install Node (via nvm), git clone your Week 13 API, env vars, run it, hit ip:3000 from your laptop. It dies when you close SSH — tomorrow fixes that.", l: [["nvm repo", "https://github.com/nvm-sh/nvm"]] },
+  { t: "Keeping it alive: pm2", g: "The app survives crashes, reboots and your logout.", d: "pm2 start/logs/restart, pm2 startup for boot persistence. Kill the process, watch it resurrect; reboot the VPS, verify it returns. Logs via pm2 logs — your first ops muscle.", l: [["pm2 quick start", "https://pm2.keymetrics.io/docs/usage/quick-start/"]] },
+  { t: "Project Saturday: deploy day", g: "Milestone: an app of yours, on your server, stable.", d: "Deploy the fullstack todo (API + built frontend) on the VPS, document every command you ran in a DEPLOY.md. That document becomes your runbook template.", l: [] }
+]},
+34: { topic: "nginx, domains, HTTPS", ms: "Live on your own domain with SSL", days: [
+  { t: "nginx reverse proxy", g: "Port 80 proxies cleanly to your Node app.", d: "Install nginx, server block proxying to localhost:3000. Why a proxy: TLS termination, multiple apps per box, static file serving, buffering. Read the beginner's guide, not just a tutorial.", l: [["nginx beginner's guide", "https://nginx.org/en/docs/beginners_guide.html"]] },
+  { t: "A domain", g: "yourname.dev (or similar) points at your VPS.", d: "Buy a domain (~€10/yr — Namecheap/Cloudflare), A record → VPS IP, understand propagation and TTL. Check with dig/nslookup. DNS knowledge pays off forever.", l: [["Cloudflare: DNS learning", "https://www.cloudflare.com/learning/dns/what-is-dns/"]] },
+  { t: "HTTPS with Let's Encrypt", g: "Green padlock on your domain.", d: "certbot --nginx: free cert, auto-renewal, HTTP→HTTPS redirect. Understand what the cert proves and what the CA does. HTTPS is non-negotiable for anything with a login.", l: [["Certbot instructions", "https://certbot.eff.org"]] },
+  { t: "Multiple apps, one server", g: "Two apps on subdomains of one VPS.", d: "api.yourdomain.dev and app.yourdomain.dev via separate server blocks. This is how your consulting demos will live: one cheap box, many polished URLs.", l: [["nginx: Server names", "https://nginx.org/en/docs/http/server_names.html"]] },
+  { t: "Hardening + monitoring basics", g: "fail2ban, log awareness, a simple uptime check.", d: "fail2ban for SSH, reading nginx access/error logs (tail -f during a visit), free uptime monitor (UptimeRobot) pinging your domain. Know when your stuff breaks before users tell you.", l: [["fail2ban wiki", "https://github.com/fail2ban/fail2ban/wiki"]] },
+  { t: "Project Saturday: production milestone", g: "Milestone: HTTPS domain serving your app, documented.", d: "Full pass: domain → nginx → pm2 → app → DB. Update DEPLOY.md with the complete runbook. Screenshot the padlock for your log — earned.", l: [] }
+]},
+35: { topic: "Docker", ms: "ModelHub dockerized on the VPS", days: [
+  { t: "Images + containers", g: "You can explain images vs containers and run both.", d: "docker run hello-world, then run postgres and redis locally in containers — no installs. 'Works on my machine' dies today. Do the official Get Started part 1–2.", l: [["Docker: Get started", "https://docs.docker.com/get-started/"]] },
+  { t: "Dockerfile for a Node app", g: "Your API builds into an image anyone can run.", d: "FROM node, layer caching (copy package.json first!), multi-stage builds for small images, .dockerignore. Build, run, test locally. Read each instruction's purpose — cargo-culting Dockerfiles causes pain later.", l: [["Docker: Node.js guide", "https://docs.docker.com/guides/nodejs/"]] },
+  { t: "docker compose", g: "App + Postgres + Redis start with one command.", d: "compose.yaml defining services, volumes for data persistence, service-name networking (db:5432 not localhost). Your whole dev environment becomes one file in git.", l: [["Docker: Compose intro", "https://docs.docker.com/compose/"]] },
+  { t: "Dockerize ModelHub", g: "Web + worker + Postgres + Redis, all composed.", d: "Two app containers (Next server, BullMQ worker) sharing one image or two, plus data services. Env vars via compose. The worker/web split you built in Week 32 pays off here.", l: [] },
+  { t: "Compose on the VPS", g: "ModelHub runs on your server via compose.", d: "Install Docker on the VPS, clone, docker compose up -d, nginx proxying to the container. Volume backups: know where your Postgres data actually lives.", l: [["Docker: Install on Ubuntu", "https://docs.docker.com/engine/install/ubuntu/"]] },
+  { t: "Project Saturday: ModelHub live", g: "Milestone: ModelHub on your domain, containerized.", d: "modelhub.yourdomain.dev with HTTPS, full pipeline working in production. Test an upload end to end. Update the demo video with the live URL.", l: [] }
+]},
+36: { topic: "CI/CD + consulting launch", ms: "Auto-deploy · CONSULTING SOFT-LAUNCH", days: [
+  { t: "GitHub Actions basics", g: "A workflow runs your tests on every push.", d: "actions quickstart: workflow YAML, triggers, jobs, steps. Add a CI workflow to ModelHub: install → typecheck → Vitest. Red X on a bad push = the safety net every serious repo has.", l: [["GH Actions quickstart", "https://docs.github.com/en/actions/quickstart"]] },
+  { t: "Build + test pipeline", g: "CI builds the Docker image and runs Playwright.", d: "Extend the workflow: docker build, E2E against a compose stack in CI. Slow is fine; trustworthy matters. Cache dependencies to keep it under ~5 minutes.", l: [["GH Actions: Docker", "https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-docker-images"]] },
+  { t: "Auto-deploy to the VPS", g: "Push to main → live on your domain, hands-free.", d: "Deploy job: SSH action → pull → compose up --build (or push image to GHCR and pull). Secrets in GitHub, not YAML. Your first full CI/CD loop — the DevOps phase's crown.", l: [["GH Actions: Secrets", "https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions"]] },
+  { t: "S3/CDN for assets", g: "Static assets served from a CDN path.", d: "Big files (model derivatives, exports) belong in object storage behind a CDN, not your Node process. Wire R2's public bucket + cache headers for ModelHub exports.", l: [["R2: Public buckets", "https://developers.cloudflare.com/r2/buckets/public-buckets/"]] },
+  { t: "Consulting page + outreach prep", g: "A services page and a launch message, ready.", d: "One page on your portfolio: who you help (AEC firms), with what (automation, interop, AI document tools), proof (SpecSense, ModelHub demos). Draft the LinkedIn post + 10 direct messages.", l: [] },
+  { t: "Project Saturday: CONSULTING SOFT-LAUNCH", g: "MILESTONE: you are publicly for hire.", d: "Publish the page, post the post, send the 10 messages (Mom Test contacts first). Founder milestone due today. Whatever replies come, log every conversation in problem-log.md.", l: [] }
+]},
+37: { topic: "Capstone: spec + monorepo", ms: "Written spec + scaffolded monorepo", days: [
+  { t: "Write the spec", g: "A one-pager anyone could build from.", d: "From the Week 31 decision: problem, target user, core workflow (ONE), integration choice, openBIM standard (BCF or IDS), AI feature, explicit non-goals. Ruthless scope-cutting today saves Weeks 38–42.", l: [] },
+  { t: "Scope the walking skeleton", g: "The thinnest end-to-end slice, defined.", d: "Walking skeleton = every layer touched, minimal function: login → create thing → process → see result. List the slice's tickets. Everything else waits.", l: [] },
+  { t: "Turborepo scaffold", g: "Monorepo with apps/web, apps/api (if separate), packages/*.", d: "Turborepo init: shared TS config, ESLint, the pipeline. Monorepo = the suite-not-tool principle in code — every future product lands in this repo.", l: [["Turborepo docs", "https://turborepo.com/docs"]] },
+  { t: "Shared packages: ui + auth", g: "packages/ui and packages/auth consumed by the app.", d: "Extract your Tailwind UI kit into packages/ui; auth utilities into packages/auth. Import across the workspace. Shared packages force the clean boundaries you'll thank yourself for.", l: [["Turborepo: Internal packages", "https://turborepo.com/docs/core-concepts/internal-packages"]] },
+  { t: "Database schema", g: "Prisma schema for orgs, users, memberships, core entities.", d: "Multi-tenancy from row one: every core table carries orgId. Model the capstone's domain entities. Migrate against a fresh Neon DB. Schema review with Cursor before migrating.", l: [] },
+  { t: "Project Saturday: skeleton plan review", g: "Milestone: spec + scaffold + schema, all reviewed.", d: "Walk the spec and schema with Cursor as a skeptical CTO: what's over-engineered, what's missing, where will Week 40 hurt? Adjust. Commit the plan.", l: [] }
+]},
+38: { topic: "Capstone: core workflow I", ms: "Walking skeleton works end to end", days: [
+  { t: "Auth + org creation", g: "Sign up → org created → member session.", d: "Wire packages/auth into the app: signup creates user + org + membership. Session carries orgId. Every query from day one filters by it — no retrofitting tenancy.", l: [] },
+  { t: "Core entity CRUD", g: "The capstone's central object: create, list, view.", d: "Whatever your product's noun is (check, requirement, package, report) — server actions + list/detail pages using packages/ui. Boring, fast work now; you've done CRUD five times.", l: [] },
+  { t: "The processing step", g: "The workflow's engine does its job on real input.", d: "The step that makes your product valuable (parse/check/extract/transform). Queue it (Week 32 pattern) with job records. Start with the simplest real case, not edge cases.", l: [] },
+  { t: "Results view", g: "Processed output visible, useful, honest.", d: "Results page: what passed/failed/was found, with enough context to act on. This screen IS the product to your design partner — spend real design effort here.", l: [] },
+  { t: "Skeleton integration test", g: "One Playwright test walks the whole skeleton.", d: "signup → create → process → results, automated. This test is your regression armor for the remaining four weeks of rapid change. Vitest the core logic too.", l: [["Playwright: Writing tests", "https://playwright.dev/docs/writing-tests"]] },
+  { t: "Project Saturday: MILESTONE — skeleton demo", g: "The walking skeleton, recorded.", d: "Deploy to the VPS (CI/CD from Week 36 makes this a push). Record the 90-second walkthrough. Send it to your design partner: 'this is where it's going — reactions?'", l: [] }
+]},
+39: { topic: "Capstone: workflow II + integration", ms: "Integration live with real data", days: [
+  { t: "Deepen the core workflow", g: "The main workflow handles the top 3 real-world variations.", d: "Design partner's actual files/data will be messier than your test data. Handle the variations that matter; log-and-skip the ones that don't (job records make skips visible).", l: [] },
+  { t: "Integration: connect", g: "OAuth/token flow to Speckle, APS or the chosen webhook source.", d: "The external connection your spec committed to. Auth flow, token storage (encrypted), a 'connected' state in org settings. Week 31 experience makes this familiar.", l: [] },
+  { t: "Integration: data flow", g: "External data flows into the core workflow automatically.", d: "Pull (or receive via webhook) → normalize → feed the processing step. The integration is only done when it triggers the workflow without manual steps.", l: [] },
+  { t: "openBIM standard feature", g: "BCF or IDS is genuinely in the product.", d: "Per spec: export findings as BCF issues, or accept IDS as the requirements input. Standards support = enterprise credibility + the interop moat from your defensibility principles.", l: [["BCF spec", "https://github.com/buildingSMART/BCF-XML"], ["IDS spec", "https://github.com/buildingSMART/IDS"]] },
+  { t: "Real data day", g: "The design partner's real project data runs through, live.", d: "Sit with them (call or screen-share) and run THEIR data. Watch where they hesitate, what confuses, what excites. Log everything — this is Mom Test gold at product stage.", l: [] },
+  { t: "Project Saturday: MILESTONE — integration live", g: "External data → workflow → results, in production.", d: "Fix the top 3 issues from the real-data session, deploy, verify with the partner's data again. Update the Playwright test to cover the integration path.", l: [] }
+]},
+40: { topic: "Capstone: multi-tenant + AI", ms: "Feature-complete for a design partner", days: [
+  { t: "Org management", g: "Invite teammates; memberships with roles exist.", d: "Invite-by-email flow, accept → membership with role (admin/member/viewer). Tenancy is already in the schema (Week 37 foresight); this is the UX layer on top.", l: [] },
+  { t: "RBAC", g: "Roles actually gate actions, server-side.", d: "Permission checks in server actions/middleware (never only in UI), viewer = read-only, admin = settings/billing-ready. Write Vitest cases for each role × action combination.", l: [] },
+  { t: "Tenant isolation audit", g: "Cross-org access is provably impossible.", d: "Adversarial day: two test orgs, try every way to reach org B's data from org A (IDs in URLs, API calls, exports). Fix every leak. B2B deals die on this exact audit.", l: [] },
+  { t: "The AI feature (build)", g: "The spec's AI feature works on real data.", d: "Whatever earns its place (Week 29 skills): summarize findings, explain failures, extract requirements, draft the report. Structured outputs, honest failure modes, token budgets.", l: [] },
+  { t: "The AI feature (harden)", g: "AI output is trustworthy enough for a client to see.", d: "Show sources/confidence, allow correction, never block the workflow when the model fails. Log prompts + outputs for review. 'AI that admits uncertainty' is a feature, not a weakness.", l: [] },
+  { t: "Project Saturday: MILESTONE — feature complete", g: "A design partner could use this unsupervised... almost.", d: "Full walkthrough as a new user: signup → invite → connect → process → results → AI assist. List every rough edge for Week 41. Deploy.", l: [] }
+]},
+41: { topic: "Capstone: telemetry, tests, deploy", ms: "Production deploy on custom domain", days: [
+  { t: "Sentry + structured logs", g: "Errors reach you before users report them.", d: "Sentry SDK (client + server), structured JSON logs with request/job ids, alert rule to your email. Wire job failures to Sentry too — the telemetry non-negotiable, done.", l: [["Sentry: Next.js", "https://docs.sentry.io/platforms/javascript/guides/nextjs/"]] },
+  { t: "Test baseline", g: "Vitest on core logic + Playwright happy path, green in CI.", d: "Fill test gaps: processing logic units, RBAC cases, the E2E covering signup→result. The testing gate from PLAN.md — no launch without it.", l: [["Vitest guide", "https://vitest.dev/guide/"]] },
+  { t: "Polish day: UX", g: "The 10 roughest edges, smoothed.", d: "Loading/empty/error states, form validation messages, mobile check, favicon/meta. Work your Week 40 Saturday list. Small things compound into 'this feels solid'.", l: [] },
+  { t: "Performance + security pass", g: "Fast enough, locked down enough.", d: "Big-model handling, N+1 queries (Prisma logs), rate limiting on public endpoints, headers (helmet/next defaults), secrets audit, OWASP upload checklist re-check.", l: [["OWASP Top 10", "https://owasp.org/www-project-top-ten/"]] },
+  { t: "Production deploy", g: "Live on the custom domain with SSL, migrations run.", d: "product.yourdomain.dev (or its own domain): compose on the VPS or hybrid with Vercel — your call, documented. Backups configured for Postgres. DEPLOY.md updated.", l: [] },
+  { t: "Project Saturday: MILESTONE — production live", g: "The capstone is production-deployed and monitored.", d: "Full smoke test in production, Sentry receiving, uptime monitor on. Give the design partner their real account. Breathe — next week you launch.", l: [] }
+]},
+42: { topic: "Capstone: LAUNCH", ms: "MVP LAUNCHED — design partners invited", days: [
+  { t: "Landing page", g: "A page that makes the right person say 'that's my problem'.", d: "Problem headline (their words, from Mom Test logs), workflow screenshots, the outcome, one CTA: join the waitlist / book a demo. Week 3's landing skills + a year of context.", l: [] },
+  { t: "Waitlist + PostHog", g: "Signups captured; behavior measurable.", d: "Waitlist form → your DB + email notification. PostHog: pageviews, CTA clicks, demo-video plays. You can't improve conversion you don't measure.", l: [["PostHog docs", "https://posthog.com/docs"]] },
+  { t: "Case study", g: "The design-partner story, written and quotable.", d: "Problem → before → after with your product → numbers if you have them → their quote (ask!). The single most persuasive B2B asset you can own at this stage.", l: [] },
+  { t: "Demo video", g: "A 3-minute video a stranger understands.", d: "Script it: problem (30s) → workflow (2min) → CTA (30s). Record with OBS/Loom, real data, your voice. Done beats perfect; you can re-record next month.", l: [] },
+  { t: "Launch prep", g: "Every asset staged; the announcement drafted.", d: "LinkedIn post, direct messages to every Mom Test contact (personalized), relevant community posts (Speckle forum, AEC tech groups). Final production smoke test.", l: [] },
+  { t: "Project Saturday: LAUNCH 🚀", g: "MILESTONE: the MVP is public. You did the whole plan.", d: "Post it. Send every message. Respond to everything all day. Log every reply in problem-log.md — launch day conversations seed the next quarter's roadmap. Then celebrate properly: 43 weeks ago you couldn't write HTML.", l: [] }
+]}
 };
 
 // ===================== EXERCISES_DATA (from EXERCISES.md Weeks 0-9) =====================
@@ -505,17 +820,16 @@ function weekOf(date) {
 }
 function weekMonday(w) { return new Date(w1mon.getTime() + (w - 1) * 7 * DAY_MS); }
 function phaseOfWeek(w) { return PLAN_DATA.phases.find(p => w >= p.weeks[0] && w <= p.weeks[1]); }
+function dayDate(w, i) { return w === 0 ? new Date(start.getTime() + i * DAY_MS) : new Date(weekMonday(w).getTime() + i * DAY_MS); }
 
-// Progress item list
+// Build the flat item list: one entry per plan day
 const items = [];
-Object.keys(PLAN_DATA.days).sort().forEach(ds => {
-  items.push({ id: "day-" + ds, label: PLAN_DATA.days[ds][0], date: d(ds), week: weekOf(d(ds)) });
+Object.keys(WEEK_DAYS).map(Number).sort((a, b) => a - b).forEach(w => {
+  WEEK_DAYS[w].days.forEach((day, i) => {
+    const date = dayDate(w, i);
+    items.push({ id: "day-" + iso(date), label: day.t, goal: day.g, links: day.l, date, week: w, dayIdx: i });
+  });
 });
-for (let w = 5; w <= 42; w++) {
-  const mon = weekMonday(w), sat = new Date(mon.getTime() + 5 * DAY_MS);
-  items.push({ id: "week-" + w, label: `Week ${w}: ${PLAN_DATA.weeks[w][0]}`, sub: PLAN_DATA.weeks[w][1],
-               date: sat, dateLabel: `${fmtShort(mon)} – ${fmtShort(sat)}`, week: w });
-}
 
 const store = {
   get: id => localStorage.getItem("fsplan-" + id) === "1",
@@ -532,7 +846,17 @@ function switchTab(name) {
   window.scrollTo(0, 0);
 }
 
-// ---------- Day description helper (used by Today + Tomorrow) ----------
+// Internal "#read:" links open the in-app reader
+function renderLinks(links, cls) {
+  if (!links || !links.length) return "";
+  return links.map(([label, url]) =>
+    url.startsWith("#read:")
+      ? `<a class="${cls}" onclick="openReading('${url.slice(6)}')">${label}</a>`
+      : `<a class="${cls}" href="${url}" target="_blank" rel="noopener">${label}</a>`
+  ).join(" ");
+}
+
+// ---------- Day description ----------
 function describeDay(date, compact) {
   const w = weekOf(date);
   const dow = date.getDay();
@@ -545,30 +869,64 @@ function describeDay(date, compact) {
   if (w === 99) return { label: "Beyond the plan", topic: "The 42 weeks are behind you.",
     detail: "Iterate on the MVP with design partners and grow the consulting pipeline." };
   if (dow === 0) return { label: dayNames[0] + " — rest day", topic: "No new material. Optional 10-min ritual.",
-    detail: "Skim next week in PLAN.md + RESOURCES.md; ask Cursor to expand it day-by-day. From Week 8: one problem-log entry. Founder-track reading if scheduled.", week: w };
+    detail: "Skim next week in the Plan tab; every day's material is already linked there. From Week 8: one problem-log entry. Founder-track reading if scheduled.", week: w };
+  const idx = w === 0 ? Math.round((date - start) / DAY_MS) : dow - 1;
+  const wk = WEEK_DAYS[w];
+  const day = wk && wk.days[idx];
   const phase = phaseOfWeek(w);
-  const dayInfo = PLAN_DATA.days[iso(date)];
-  if (dayInfo) return { label: `${dayNames[dow]} · Week ${w} · ${phase.name}`, topic: dayInfo[0], detail: dayInfo[1], week: w, phase };
-  const wk = PLAN_DATA.weeks[w];
-  const satNote = dow === 6 ? "Project Saturday — extend and polish, no new material. " : "";
-  const exNote = w <= 9 ? ` Exercises: Week ${w} (Exercises tab).` : " Generate this week's exercises (Exercises tab, bottom).";
-  return { label: `${dayNames[dow]} · Week ${w} · ${phase.name}`, topic: wk[0],
-           detail: satNote + (compact ? "" : `Ask Cursor: “expand Week ${w} of @PLAN.md into daily tasks.”${exNote}`),
-           milestone: wk[1], week: w, phase };
+  if (!day) return { label: `${dayNames[dow]} · Week ${w}`, topic: wk ? wk.topic : "—", detail: "", week: w, phase };
+  return { label: `${dayNames[dow]} · Week ${w} · ${phase.name}`, topic: day.t, goal: day.g, detail: day.d,
+           links: day.l, milestone: (idx === wk.days.length - 1) ? wk.ms : null, weekMs: wk.ms, week: w, phase, idx };
+}
+
+// ---------- Status banner: pending / ahead / on track ----------
+function renderBanner() {
+  const el = document.getElementById("banner");
+  el.className = "full";
+  if (today < start) { el.style.display = "none"; return; }
+  const overdue = items.filter(i => i.date < today && !store.get(i.id));
+  const ahead = items.filter(i => i.date > today && store.get(i.id)).length;
+  if (overdue.length > 0) {
+    const list = overdue.slice(0, 3).map(i =>
+      `<li>• ${i.label} <span style="font-size:0.78rem">(${fmtShort(i.date)}, Week ${i.week})</span></li>`).join("");
+    el.classList.add("pending");
+    el.innerHTML = `<div class="b-title">⚠ ${overdue.length} task${overdue.length > 1 ? "s" : ""} pending from previous days</div>
+      Catch up before adding new material — or consciously skip and move on (falling behind silently is the only real failure mode).
+      <ul>${list}${overdue.length > 3 ? `<li>…and ${overdue.length - 3} more</li>` : ""}</ul>
+      <a onclick="switchTab('plan')">Open the plan to catch up →</a>`;
+  } else if (ahead > 0) {
+    const next = items.find(i => !store.get(i.id));
+    el.classList.add("ahead");
+    el.innerHTML = `<div class="b-title">🚀 You're ahead of schedule</div>
+      ${ahead} future task${ahead > 1 ? "s" : ""} already done. Keep the momentum${next ? ` — next up: <b>${next.label}</b> (${fmtShort(next.date)})` : ""}. Or use the spare time on the founder track.`;
+  } else {
+    el.classList.add("ontrack");
+    el.innerHTML = `<div class="b-title">✓ On track</div>Nothing pending from previous days. Today's task is below.`;
+  }
 }
 
 // ---------- Today + Tomorrow ----------
+function todayCardHTML(t, isTomorrow) {
+  let html = isTomorrow ? "<h2>Tomorrow</h2>" : "";
+  html += `<div class="day-label">${t.label}</div><div class="topic">${t.topic}</div>`;
+  if (t.goal) html += `<div class="goal-line"><b>Goal:</b> ${t.goal}</div>`;
+  if (t.detail) html += `<div class="detail"${isTomorrow ? ' style="font-size:0.87rem;color:var(--muted)"' : ""}>${t.detail}</div>`;
+  if (!isTomorrow && t.links && t.links.length) html += `<div class="study-links">${renderLinks(t.links, "")}</div>`;
+  if (t.milestone) html += `<div class="milestone-flag">Week ${t.week} milestone (due Saturday): ${t.milestone}</div>`;
+  return html;
+}
+
 function renderToday() {
   const t = describeDay(today, false);
-  let html = `<div class="day-label">${t.label}</div><div class="topic">${t.topic}</div><div class="detail">${t.detail}</div>`;
-  if (t.milestone) html += `<div class="milestone-flag">Week ${t.week} milestone: ${t.milestone}</div>`;
+  let html = todayCardHTML(t, false);
   if (t.week !== undefined && t.week >= 0 && t.week !== 99 && t.phase) {
     const res = PLAN_DATA.phaseResources[t.phase.name];
     html += `<div class="meta" style="margin-top:12px">
       <span class="chip">Week <b>${t.week}</b> of 42</span>
       <span class="chip">Phase: <b>${t.phase.name}</b></span>
-      <span class="chip">Study: <a href="${res[1]}" target="_blank">${res[0]}</a></span>
-      ${t.week <= 9 ? `<span class="chip"><a class="inline" onclick="openExercises(${t.week})">Open Week ${t.week} exercises →</a></span>` : ""}
+      <span class="chip">Phase resource: <a href="${res[1]}" target="_blank">${res[0]}</a></span>
+      ${t.week <= 9 ? `<span class="chip"><a class="inline" onclick="openExercises(${t.week})">Week ${t.week} exercises →</a></span>`
+                     : `<span class="chip"><a class="inline" onclick="openBuild()">exercise prompt →</a></span>`}
       ${t.week >= 8 ? '<span class="chip">Founder: <b>1 problem-log entry this week</b></span>' : ""}
     </div>`;
   }
@@ -576,21 +934,42 @@ function renderToday() {
 
   const tm = new Date(today.getTime() + DAY_MS);
   const t2 = describeDay(tm, true);
-  let html2 = `<h2>Tomorrow</h2><div class="day-label">${t2.label}</div><div class="topic">${t2.topic}</div>
-    <div class="detail" style="font-size:0.87rem;color:var(--muted)">${t2.detail}</div>`;
-  if (t2.milestone) html2 += `<div class="detail" style="font-size:0.82rem;color:var(--accent2)">Milestone this week: ${t2.milestone}</div>`;
-  if (t2.week !== undefined && t2.week >= 0 && t2.week <= 9) {
+  let html2 = todayCardHTML(t2, true);
+  if (t2.links && t2.links.length) html2 += `<div class="study-links" style="margin-top:4px">${renderLinks(t2.links, "")}</div>`;
+  if (t2.week !== undefined && t2.week >= 0 && t2.week <= 9 && t2.week !== -1) {
     html2 += `<a class="inline" style="font-size:0.85rem" onclick="openExercises(${t2.week})">Preview Week ${t2.week} exercises →</a>`;
   }
   document.getElementById("tomorrow").innerHTML = html2;
 
+  // Dynamic links: Learn + phase resource card
   const w2 = (t.week !== undefined && t.week >= 0 && t.week !== 99) ? t.week : 0;
   const ph = phaseOfWeek(Math.min(Math.max(w2, 0), 42)) || PLAN_DATA.phases[0];
   const res = PLAN_DATA.phaseResources[ph.name];
+  const learn = document.getElementById("learn-link");
+  const firstExternal = (t.links || []).find(l => !l[1].startsWith("#read:"));
+  learn.href = firstExternal ? firstExternal[1] : res[1];
+  learn.textContent = (firstExternal ? firstExternal[0] : res[0]) + " →";
   const a = document.getElementById("phase-resource");
   a.href = res[1];
   a.firstChild.textContent = res[0] + " ";
   document.getElementById("phase-resource-desc").textContent = "Primary resource for " + ph.name;
+}
+
+function openBuild() {
+  const w = weekOf(today);
+  if (w >= 0 && w <= 9) openExercises(Math.max(w, 0));
+  else if (w >= 37 || w === 99) switchTab("projects");
+  else {
+    switchTab("exercises");
+    document.getElementById("gen-section").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function copyQuizPrompt() {
+  const w = weekOf(today);
+  const topic = (w >= 0 && w !== 99 && WEEK_DAYS[w]) ? WEEK_DAYS[w].topic : "what I studied most recently";
+  const prompt = `Quiz me for 10 minutes on ${topic} (and briefly on last week's material). Ask one question at a time, wait for my answer, tell me if I'm right, and keep score. Start easy, get harder. Don't let me get away with vague answers.`;
+  navigator.clipboard.writeText(prompt).then(() => alert("Quiz prompt copied — paste it into Cursor (Ask mode) to start your 10-minute review."));
 }
 
 // ---------- Timeline ----------
@@ -601,7 +980,8 @@ function renderTimeline() {
     const span = p.weeks[1] - p.weeks[0] + 1;
     const seg = document.createElement("div");
     seg.className = "tl-seg"; seg.style.flex = span;
-    seg.title = `${p.name} (Weeks ${p.weeks[0]}–${p.weeks[1]})`;
+    seg.title = `${p.name} (Weeks ${p.weeks[0]}–${p.weeks[1]}) — click to jump`;
+    seg.addEventListener("click", () => jumpToPhase(p.name));
     const fill = document.createElement("div");
     fill.className = "fill"; fill.style.background = p.color;
     seg.appendChild(fill);
@@ -623,8 +1003,12 @@ function renderTimeline() {
   else if (curW === 99) ht.innerHTML = `Plan complete — <b>${fmt(end)}</b> has passed.`;
   else ht.innerHTML = `You are in <b>Week ${curW}</b> (${phaseOfWeek(curW).name}) · plan ends <b>${fmt(end)}</b>`;
 }
+function jumpToPhase(name) {
+  const det = document.getElementById("phase-" + name.replace(/[^a-z]/gi, ""));
+  if (det) { det.open = true; det.scrollIntoView({ behavior: "smooth", block: "start" }); }
+}
 
-// ---------- Progress ----------
+// ---------- Progress: phase → week → day checkboxes ----------
 function renderProgress() {
   const container = document.getElementById("phases");
   container.innerHTML = "";
@@ -635,23 +1019,50 @@ function renderProgress() {
     const done = phaseItems.filter(i => store.get(i.id)).length;
     const det = document.createElement("details");
     det.className = "phase";
+    det.id = "phase-" + p.name.replace(/[^a-z]/gi, "");
     det.open = curW >= p.weeks[0] && curW <= p.weeks[1];
     det.innerHTML = `<summary><span>${p.name} <span style="color:var(--muted);font-weight:400">· Weeks ${p.weeks[0]}–${p.weeks[1]}</span></span><span class="pct">${done}/${phaseItems.length}</span></summary>`;
     const wrap = document.createElement("div");
     wrap.className = "items";
-    phaseItems.forEach(i => {
-      const row = document.createElement("div");
-      const isToday = i.id.startsWith("day-") ? iso(today) === i.id.slice(4) : (curW === i.week);
-      row.className = "item" + (store.get(i.id) ? " done" : "") + (isToday ? " today-item" : "");
-      const cb = document.createElement("input");
-      cb.type = "checkbox"; cb.id = i.id; cb.checked = store.get(i.id);
-      cb.addEventListener("change", () => { store.set(i.id, cb.checked); renderProgress(); renderStats(); });
-      const label = document.createElement("label");
-      label.htmlFor = i.id;
-      label.innerHTML = `${i.label} <span class="d">· ${i.dateLabel || fmtShort(i.date)}${i.sub ? " · " + i.sub : ""}</span>`;
-      row.appendChild(cb); row.appendChild(label);
-      wrap.appendChild(row);
-    });
+    for (let w = p.weeks[0]; w <= p.weeks[1]; w++) {
+      const wk = WEEK_DAYS[w];
+      if (!wk) continue;
+      const weekItems = items.filter(i => i.week === w);
+      const wDone = weekItems.filter(i => store.get(i.id)).length;
+      const mon = dayDate(w, 0), sat = dayDate(w, wk.days.length - 1);
+      const wdet = document.createElement("details");
+      wdet.className = "week";
+      wdet.open = curW === w;
+      wdet.innerHTML = `<summary><span><span class="wk-topic">Week ${w}: ${wk.topic}</span> <span class="wk-dates">· ${fmtShort(mon)} – ${fmtShort(sat)}</span></span><span class="pct">${wDone}/${weekItems.length}</span></summary>`;
+      const tools = document.createElement("div");
+      tools.className = "week-tools";
+      const res = PLAN_DATA.phaseResources[p.name];
+      tools.innerHTML = `<a href="${res[1]}" target="_blank">Study: ${res[0]} ↗</a>` +
+        (w <= 9 ? `<a onclick="openExercises(${w})">Exercises →</a>` : `<a onclick="switchTab('exercises');document.getElementById('gen-section').scrollIntoView()">Generate exercises →</a>`) +
+        `<span class="week-ms">Milestone: ${wk.ms}</span>`;
+      wdet.appendChild(tools);
+      const dwrap = document.createElement("div");
+      dwrap.className = "items";
+      weekItems.forEach(i => {
+        const row = document.createElement("div");
+        const isToday = iso(today) === i.id.slice(4);
+        const isOverdue = i.date < today && !store.get(i.id);
+        row.className = "item" + (store.get(i.id) ? " done" : "") + (isToday ? " today-item" : "") + (isOverdue ? " overdue-item" : "");
+        const cb = document.createElement("input");
+        cb.type = "checkbox"; cb.id = i.id; cb.checked = store.get(i.id);
+        cb.addEventListener("change", () => { store.set(i.id, cb.checked); renderProgress(); renderStats(); renderBanner(); });
+        const label = document.createElement("label");
+        label.htmlFor = i.id;
+        label.innerHTML = `${i.label} <span class="d">· ${fmtShort(i.date)}${isOverdue ? " · pending" : ""}${isToday ? " · today" : ""}</span>`;
+        row.appendChild(cb); row.appendChild(label);
+        const mats = document.createElement("span");
+        mats.innerHTML = renderLinks(i.links, "mat");
+        row.appendChild(mats);
+        dwrap.appendChild(row);
+      });
+      wdet.appendChild(dwrap);
+      wrap.appendChild(wdet);
+    }
     det.appendChild(wrap);
     container.appendChild(det);
   });
@@ -812,6 +1223,7 @@ document.getElementById("import-file").addEventListener("change", ev => {
   });
 });
 
+renderBanner();
 renderToday();
 renderTimeline();
 renderProgress();
