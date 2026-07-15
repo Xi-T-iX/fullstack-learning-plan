@@ -5,7 +5,8 @@
 # Resume:       schtasks /Change /TN "FullstackLearning-DailyReminder" /ENABLE
 # Remove:       schtasks /Delete /TN "FullstackLearning-DailyReminder" /F
 
-$dashboard = "D:\Coding Projects\fullstack-learning-plan\dashboard.html"
+$liveUrl   = "https://xi-t-ix.github.io/fullstack-learning-plan/"
+$localFile = "D:\Coding Projects\fullstack-learning-plan\dashboard.html"
 
 # --- Compute current week + phase from the PLAN.md schedule ---
 $start      = Get-Date "2026-07-17"   # Week 0 Day 1
@@ -71,5 +72,9 @@ catch {
     # Toast can fail on locked-down systems; the dashboard still opens below.
 }
 
-# --- Open the dashboard in the default browser ---
-Start-Process $dashboard
+# --- Open the dashboard: live URL when online, local copy as offline fallback ---
+$online = $false
+try {
+    $online = (Test-NetConnection -ComputerName "xi-t-ix.github.io" -Port 443 -InformationLevel Quiet -WarningAction SilentlyContinue)
+} catch { }
+if ($online) { Start-Process $liveUrl } else { Start-Process $localFile }

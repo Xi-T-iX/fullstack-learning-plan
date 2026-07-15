@@ -11,7 +11,7 @@
 
 | File | What it's for |
 |------|---------------|
-| [dashboard.html](dashboard.html) | **Your daily entry point** — opens automatically with the 10:30 reminder. Shows today's task, progress, streak, and timeline |
+| [dashboard.html](https://xi-t-ix.github.io/fullstack-learning-plan/) | **Your daily entry point** — live at [xi-t-ix.github.io/fullstack-learning-plan](https://xi-t-ix.github.io/fullstack-learning-plan/), opens automatically with the 10:30 reminder. Today's task, tomorrow preview, exercises, project checklists, progress, streak, timeline. Track progress in ONE browser; export a backup weekly |
 | **PLAN.md** (this file) | The roadmap — what to learn, when, and why |
 | [GETTING-STARTED.md](GETTING-STARTED.md) | Tool setup, Cursor basics, git, project setup recipes. **New to Cursor or dev tools? Read this FIRST, before Week 0 Day 1.** |
 | [RESOURCES.md](RESOURCES.md) | What to study each phase — one primary resource, one backup |

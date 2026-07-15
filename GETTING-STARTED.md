@@ -229,7 +229,9 @@ Your kit: **[PLAN.md](PLAN.md)** (what & when) · **[RESOURCES.md](RESOURCES.md)
 Three layers remind you to sit down at **10:30 AM, Monday–Saturday** (Sundays off, per the plan):
 
 ### 6a. Windows reminder + dashboard (installed on this PC)
-A scheduled task named **`FullstackLearning-DailyReminder`** runs `reminder.ps1` every Mon–Sat at 10:30: it shows a Windows notification with your current week and phase, and opens **`dashboard.html`** — your daily home screen with today's task, progress checkboxes, streak, and timeline.
+A scheduled task named **`FullstackLearning-DailyReminder`** runs `reminder.ps1` every Mon–Sat at 10:30: it shows a Windows notification with your current week and phase, and opens the dashboard — your daily home screen with today's task, tomorrow's preview, exercises, project checklists, progress checkboxes, streak, and timeline.
+
+**The dashboard lives at [https://xi-t-ix.github.io/fullstack-learning-plan/](https://xi-t-ix.github.io/fullstack-learning-plan/)** — bookmark it; it works on your phone too. The reminder opens this URL (falling back to the local `dashboard.html` copy if you're offline).
 
 Manage it from any terminal:
 
@@ -240,7 +242,18 @@ schtasks /Change /TN "FullstackLearning-DailyReminder" /ENABLE     # resume
 schtasks /Delete /TN "FullstackLearning-DailyReminder" /F          # remove entirely
 ```
 
-You can also open `dashboard.html` anytime by double-clicking it — progress lives in your browser (localStorage), so always use the same browser for it.
+**Three habits that keep your progress safe:**
+- **One browser rule:** progress checkboxes are saved in the browser you tick them in (localStorage). Pick one browser on your PC as the canonical tracker and always use it. Your phone can *read* everything at the same URL, but its checkboxes are a separate copy.
+- **Weekly backup:** every Saturday, click **Export progress** in the dashboard's top bar and save the JSON file into this plan folder — then it gets committed with everything else. **Import** restores it after a browser reset or on a new machine.
+- **Publishing updates:** the dashboard and plan files live in the GitHub repo [`Xi-T-iX/fullstack-learning-plan`](https://github.com/Xi-T-iX/fullstack-learning-plan). Whenever a file in this folder changes, publish with:
+
+```powershell
+git add .
+git commit -m "describe what changed"
+git push
+```
+
+The live site updates itself about a minute after the push. (This is also your first real git habit — the same loop you'll use on every project.)
 
 ### 6b. Cursor automation (daily agent briefing)
 A scheduled Cursor automation ("Daily Learning Kickoff") posts your day's specific task breakdown every Mon–Sat at 10:30 in the Agents window — so when you open Cursor, your plan for the session is already waiting. Manage it at cursor.com → Automations (or the Automations tab in Cursor).
