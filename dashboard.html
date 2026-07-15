@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fullstack Plan — Learning App</title>
+<!--
+  This app is a VIEW of PLAN.md / EXERCISES.md — the markdown files stay the source of truth.
+  If they change, ask Cursor: "Regenerate the PLAN_DATA / EXERCISES_DATA / CHECKLISTS blocks
+  in @dashboard.html from the current markdown files."
+  Progress lives in this browser's localStorage — use Export weekly as backup.
+-->
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c2330; --border: #2d333b;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --accent2: #f0883e;
+    --green: #3fb950; --purple: #bc8cff; --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.55; padding: 20px; max-width: 1100px; margin: 0 auto;
+  }
+  header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 14px; }
+  header h1 { font-size: 1.35rem; font-weight: 650; }
+  header .sub { color: var(--muted); font-size: 0.85rem; }
+
+  nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; position: sticky; top: 0; background: var(--bg); padding: 8px 0; z-index: 5; }
+  nav.tabs button {
+    background: var(--panel); color: var(--muted); border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 18px; font-size: 0.9rem; cursor: pointer; font-weight: 600;
+  }
+  nav.tabs button.active { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  nav.tabs .spacer { flex: 1; }
+  nav.tabs button.util { font-weight: 400; font-size: 0.8rem; }
+
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .full { grid-column: 1 / -1; }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .card h2 { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; }
+
+  #today.card { border-left: 4px solid var(--accent); }
+  #tomorrow.card { border-left: 4px solid var(--purple); }
+  .day-label { color: var(--accent); font-weight: 600; font-size: 0.92rem; }
+  #tomorrow .day-label { color: var(--purple); }
+  .topic { font-size: 1.25rem; font-weight: 650; margin: 6px 0 10px; }
+  #tomorrow .topic { font-size: 1.05rem; }
+  .detail { font-size: 0.95rem; margin-bottom: 12px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; font-size: 0.8rem; color: var(--muted); }
+  .chip b { color: var(--text); font-weight: 600; }
+  .chip a, a.inline { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .milestone-flag { margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(240,136,62,0.12); border: 1px solid rgba(240,136,62,0.4); color: var(--accent2); font-size: 0.88rem; }
+
+  .blocks { list-style: none; }
+  .blocks li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .blocks li:last-child { border-bottom: none; }
+  .blocks .t { color: var(--accent); min-width: 88px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .timeline { display: flex; height: 32px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .tl-seg { position: relative; min-width: 0; }
+  .tl-seg .fill { position: absolute; inset: 0; opacity: 0.5; }
+  .tl-seg .done-fill { position: absolute; top: 0; bottom: 0; left: 0; opacity: 0.95; }
+  .tl-labels { display: flex; margin-top: 6px; font-size: 0.68rem; color: var(--muted); }
+  .tl-labels span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 4px; }
+  .here { margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
+  .here b { color: var(--accent); }
+
+  .progress-bar-outer { background: var(--panel2); border-radius: 999px; height: 14px; overflow: hidden; border: 1px solid var(--border); margin: 8px 0 4px; }
+  .progress-bar-inner { background: linear-gradient(90deg, var(--accent), var(--purple)); height: 100%; width: 0; transition: width 0.4s; }
+  .stats { display: flex; gap: 18px; margin: 10px 0 6px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .n { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+  .stat .l { font-size: 0.72rem; color: var(--muted); }
+
+  details.phase, details.exweek { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; background: var(--panel2); }
+  details summary { cursor: pointer; padding: 9px 12px; font-size: 0.92rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary .pct { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
+  .items { padding: 4px 12px 10px; }
+  .item { display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; font-size: 0.87rem; }
+  .item input { margin-top: 3px; accent-color: var(--green); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+  .item label { cursor: pointer; }
+  .item .d { color: var(--muted); font-size: 0.77rem; }
+  .item.done > label { color: var(--muted); text-decoration: line-through; }
+  .item.today-item > label { color: var(--accent); font-weight: 600; }
+
+  /* Exercise cards */
+  .ex-card { border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; background: var(--panel); }
+  .ex-card summary { font-size: 0.88rem; }
+  .ex-card .ex-body { padding: 4px 14px 12px; font-size: 0.87rem; }
+  .ex-card .ex-body p { margin-bottom: 8px; }
+  .ex-tag { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  .ex-tag.goal { color: var(--accent); }
+  .ex-tag.check { color: var(--green); }
+  .ex-tag.stretch { color: var(--accent2); }
+  .ex-done { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.85rem; color: var(--muted); }
+  .ex-done input { accent-color: var(--green); width: 15px; height: 15px; }
+
+  pre.prompt-box {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px; font-size: 0.8rem; white-space: pre-wrap; font-family: Consolas, monospace;
+    color: var(--text); margin: 10px 0;
+  }
+  button.small {
+    background: var(--panel2); color: var(--accent); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 14px; font-size: 0.82rem; cursor: pointer;
+  }
+  button.small:hover { border-color: var(--accent); }
+
+  .ft { list-style: none; }
+  .ft li { font-size: 0.88rem; margin-bottom: 7px; padding-left: 14px; position: relative; }
+  .ft li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
+  .ft .due { color: var(--accent2); font-size: 0.78rem; }
+  .ft .done-ms { color: var(--green); }
+
+  .links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .links a, .links button {
+    display: block; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; color: var(--text); text-decoration: none; font-size: 0.88rem;
+    text-align: left; cursor: pointer; width: 100%; font-family: inherit;
+  }
+  .links a:hover, .links button:hover { border-color: var(--accent); }
+  .links .desc { display: block; color: var(--muted); font-size: 0.76rem; }
+
+  /* Reading tab */
+  .read-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .read-nav button { background: var(--panel2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 0.85rem; cursor: pointer; }
+  .read-nav button.active { border-color: var(--accent); color: var(--accent); }
+  #md-content { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; font-size: 0.93rem; }
+  #md-content h1 { font-size: 1.4rem; margin: 18px 0 10px; }
+  #md-content h2 { font-size: 1.15rem; margin: 18px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  #md-content h3 { font-size: 1rem; margin: 14px 0 6px; }
+  #md-content p, #md-content ul, #md-content ol { margin-bottom: 10px; }
+  #md-content ul, #md-content ol { padding-left: 24px; }
+  #md-content code { background: var(--panel2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 0.85em; }
+  #md-content pre { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; margin-bottom: 10px; }
+  #md-content pre code { background: none; border: none; padding: 0; }
+  #md-content table { border-collapse: collapse; margin-bottom: 12px; width: 100%; }
+  #md-content th, #md-content td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; font-size: 0.87rem; }
+  #md-content th { background: var(--panel2); }
+  #md-content a { color: var(--accent); }
+  #md-content blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--muted); margin-bottom: 10px; }
+
+  footer { margin-top: 24px; color: var(--muted); font-size: 0.76rem; text-align: center; }
+  .notice { background: rgba(240,136,62,0.1); border: 1px solid rgba(240,136,62,0.35); color: var(--accent2); border-radius: 8px; padding: 12px 14px; font-size: 0.88rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Fullstack Plan — Learning App</h1>
+  <div class="sub">Jul 17, 2026 → May 8, 2027 · 1–2 hrs/day · Sundays off</div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="today" class="active">Today</button>
+  <button data-tab="plan">Plan</button>
+  <button data-tab="exercises">Exercises</button>
+  <button data-tab="projects">Projects</button>
+  <button data-tab="reading">Reading</button>
+  <span class="spacer"></span>
+  <button class="util" id="btn-export" title="Download your progress as a backup file">Export progress</button>
+  <button class="util" id="btn-import" title="Restore progress from a backup file">Import</button>
+  <input type="file" id="import-file" accept=".json" style="display:none">
+</nav>
+
+<!-- ==================== TODAY ==================== -->
+<div class="tab-page active" id="page-today">
+  <div class="grid">
+    <div class="card full" id="today"></div>
+    <div class="card" id="tomorrow"></div>
+    <div class="card">
+      <h2>The 90-minute block</h2>
+      <ul class="blocks">
+        <li><span class="t">0:00–0:10</span><span>Review yesterday's log; ask Cursor to quiz you</span></li>
+        <li><span class="t">0:10–0:40</span><span>Learn — today's resource</span></li>
+        <li><span class="t">0:40–1:25</span><span><b>Build</b> — exercise or project task</span></li>
+        <li><span class="t">1:25–1:30</span><span>Commit to GitHub + log 2–3 lines</span></li>
+      </ul>
+    </div>
+    <div class="card full">
+      <h2>Founder track (Track 2)</h2>
+      <ul class="ft" id="founder-track"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PLAN ==================== -->
+<div class="tab-page" id="page-plan">
+  <div class="grid">
+    <div class="card full">
+      <h2>Timeline — you are here</h2>
+      <div class="timeline" id="timeline"></div>
+      <div class="tl-labels" id="tl-labels"></div>
+      <div class="here" id="here-text"></div>
+    </div>
+    <div class="card full">
+      <h2>Progress</h2>
+      <div class="stats">
+        <div class="stat"><div class="n" id="stat-pct">0%</div><div class="l">overall</div></div>
+        <div class="stat"><div class="n" id="stat-done">0</div><div class="l">items done</div></div>
+        <div class="stat"><div class="n" id="stat-streak">0</div><div class="l">streak</div></div>
+        <div class="stat"><div class="n" id="stat-days">–</div><div class="l">days to MVP launch</div></div>
+      </div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-inner"></div></div>
+      <div style="height:12px"></div>
+      <div id="phases"></div>
+    </div>
+    <div class="card full">
+      <h2>Quick links</h2>
+      <div class="links">
+        <button onclick="openReading('PLAN.md')">PLAN.md <span class="desc">The roadmap — read in-app</span></button>
+        <button onclick="openReading('GETTING-STARTED.md')">GETTING-STARTED.md <span class="desc">Setup, Cursor, git, recipes</span></button>
+        <button onclick="openReading('RESOURCES.md')">RESOURCES.md <span class="desc">What to study each phase</span></button>
+        <button onclick="openReading('EXERCISES.md')">EXERCISES.md <span class="desc">Full exercise file</span></button>
+        <a href="https://github.com" target="_blank">GitHub <span class="desc">Your repos — commit today?</span></a>
+        <a id="phase-resource" href="#" target="_blank">Current phase resource <span class="desc" id="phase-resource-desc"></span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== EXERCISES ==================== -->
+<div class="tab-page" id="page-exercises">
+  <div class="card full" style="margin-bottom:16px">
+    <h2>How to use exercises</h2>
+    <div style="font-size:0.9rem">Learn → <b>build (typed by you)</b> → verify with the self-check → explain it back to Cursor in Ask mode. Struggle 15–20 minutes before asking for help, and ask for <i>hints</i>, not answers. Weeks 0–9 are below; from Week 10, generate each week's set with the prompt at the bottom.</div>
+  </div>
+  <div id="exercise-weeks"></div>
+  <div class="card full" style="margin-top:16px">
+    <h2>Weeks 10+ — generate your exercises (copy this into Cursor)</h2>
+    <pre class="prompt-box" id="gen-prompt">Based on Week N of @PLAN.md (topic: ___), generate 4 exercises for me.
+
+Context: I've completed everything through Week N-1. My weak spots right now: ___.
+
+Rules:
+- Ordered easy → hard; the last one combines this week's topic with earlier material.
+- AEC-flavored where natural (building elements, models, specs) — my domain.
+- Each exercise must have: goal, steps, expected result, and a SELF-CHECK I can
+  verify alone (exact console output, a curl command and its response, a DevTools
+  check, or a test that should pass).
+- Do NOT show solutions. When I paste my attempt, give hints first, full
+  solution only if I ask twice.</pre>
+    <button class="small" onclick="copyGenPrompt()">Copy prompt</button>
+  </div>
+</div>
+
+<!-- ==================== PROJECTS ==================== -->
+<div class="tab-page" id="page-projects">
+  <div class="card full" style="margin-bottom:16px">
+    <h2>Definition of done</h2>
+    <div style="font-size:0.9rem">Audit yourself against these before declaring a project finished. Check items off as they become true — no project is done until every box is ticked (PLAN.md wording wins if they ever drift).</div>
+  </div>
+  <div id="project-checklists"></div>
+</div>
+
+<!-- ==================== READING ==================== -->
+<div class="tab-page" id="page-reading">
+  <div class="read-nav" id="read-nav">
+    <button data-file="PLAN.md">PLAN.md</button>
+    <button data-file="GETTING-STARTED.md">GETTING-STARTED.md</button>
+    <button data-file="RESOURCES.md">RESOURCES.md</button>
+    <button data-file="EXERCISES.md">EXERCISES.md</button>
+  </div>
+  <div id="md-content"><p style="color:var(--muted)">Pick a file above to read it here.</p></div>
+</div>
+
+<footer>
+  This app is a view of the markdown plan files — ask Cursor to regenerate its data blocks if the plan changes.
+  Progress lives in this browser (localStorage) — export a backup weekly.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script>
+// ===================== PLAN_DATA (generated from PLAN.md — regenerate if PLAN.md changes) =====================
+const PLAN_DATA = {
+  start: "2026-07-17", week1Monday: "2026-07-20", endDate: "2027-05-08",
+  phases: [
+    { name: "Fundamentals",    weeks: [0, 4],   color: "#58a6ff" },
+    { name: "JS + DOM",        weeks: [5, 9],   color: "#79c0ff" },
+    { name: "Backend",         weeks: [10, 13], color: "#bc8cff" },
+    { name: "Databases",       weeks: [14, 15], color: "#d2a8ff" },
+    { name: "TypeScript",      weeks: [16, 17], color: "#f0883e" },
+    { name: "React",           weeks: [18, 21], color: "#ffa657" },
+    { name: "Tailwind + Next", weeks: [22, 27], color: "#3fb950" },
+    { name: "AI Engineering",  weeks: [28, 29], color: "#56d364" },
+    { name: "AEC Data & BIM",  weeks: [30, 32], color: "#f778ba" },
+    { name: "DevOps",          weeks: [33, 36], color: "#ff9bce" },
+    { name: "Capstone MVP",    weeks: [37, 42], color: "#e3b341" }
+  ],
+  phaseResources: {
+    "Fundamentals":    ["MDN Learn Web Development", "https://developer.mozilla.org/en-US/docs/Learn_web_development"],
+    "JS + DOM":        ["javascript.info", "https://javascript.info"],
+    "Backend":         ["Express docs", "https://expressjs.com"],
+    "Databases":       ["Prisma docs", "https://www.prisma.io/docs"],
+    "TypeScript":      ["TypeScript Handbook", "https://www.typescriptlang.org/docs/handbook/intro.html"],
+    "React":           ["react.dev tutorial", "https://react.dev/learn"],
+    "Tailwind + Next": ["Next.js Learn", "https://nextjs.org/learn"],
+    "AI Engineering":  ["Vercel AI SDK docs", "https://ai-sdk.dev/docs"],
+    "AEC Data & BIM":  ["That Open docs", "https://docs.thatopen.com"],
+    "DevOps":          ["Docker Get Started", "https://docs.docker.com/get-started/"],
+    "Capstone MVP":    ["Turborepo docs", "https://turborepo.com/docs"]
+  },
+  days: {
+    "2026-07-17": ["Setup: installs + Cursor basics", "GETTING-STARTED.md sections 1–2: Node, Git, GitHub, Cursor modes, disable Tab autocomplete."],
+    "2026-07-18": ["Setup: first repo + how the web works", "Exercises 0.1 & 0.2: repo 'learning-fullstack', push hello-world, DNS→HTTP→render in your own words."],
+    "2026-07-20": ["HTML: document structure", "Headings, paragraphs, lists, links. Build a plain-HTML personal page. Exercise 1.1."],
+    "2026-07-21": ["HTML: semantic tags", "Images, attributes, header/nav/main/footer. Extend the page."],
+    "2026-07-22": ["HTML: forms", "Inputs, labels, selects, textarea. Build the project-inquiry form. Exercise 1.2."],
+    "2026-07-23": ["HTML: tables + Todo skeleton", "Static Todo app skeleton: heading, input, hardcoded list. Exercise 1.3."],
+    "2026-07-24": ["HTML: semantics + accessibility", "Cursor audit of your Todo skeleton — fix every issue by hand. Exercise 1.4."],
+    "2026-07-25": ["Project Saturday: portfolio skeleton", "One-page pure-HTML portfolio: 'computational designer building web tools for AEC'."],
+    "2026-07-27": ["CSS: selectors + text", "Selectors, colors, units, text styling. Style your personal page."],
+    "2026-07-28": ["CSS: the box model", "Margin, padding, border, box-sizing. The #1 beginner wall — take the full day. Exercise 2.1."],
+    "2026-07-29": ["CSS: display + position", "Relative/absolute/fixed/sticky. Build a fixed navbar. Exercise 2.2."],
+    "2026-07-30": ["CSS: flexbox I", "Main axis, cross axis, justify/align. Lay out the Todo app. Exercise 2.3."],
+    "2026-07-31": ["CSS: flexbox II", "Wrap, grow/shrink. Card grid of your real AEC projects. Exercise 2.4."],
+    "2026-08-01": ["Project Saturday: style the Todo app", "Make it look good, not just work."],
+    "2026-08-03": ["CSS: grid", "Template columns/rows, gap, areas."],
+    "2026-08-04": ["CSS: grid vs flexbox", "Rebuild the project cards with grid. Exercise 3.1."],
+    "2026-08-05": ["Responsive design", "Media queries, mobile-first. Todo app mobile-friendly. Exercise 3.2."],
+    "2026-08-06": ["CSS: polish", "Transitions, hovers, shadows, radius. Exercise 3.3."],
+    "2026-08-07": ["Build day: AEC SaaS landing page", "Invent a product (NOT a configurator). B2B copy: problem, outcome, CTA."],
+    "2026-08-08": ["Project Saturday: deploy!", "Landing page + portfolio live on GitHub Pages. First live URLs. Exercise 3.4."],
+    "2026-08-10": ["JS: variables + types", "let/const, operators, template strings. Browser console. Exercise 4.1."],
+    "2026-08-11": ["JS: functions", "Declarations, arrows, scope. Compare to Grasshopper components. Exercise 4.2."],
+    "2026-08-12": ["JS: array methods", "map/filter/reduce/find — Grasshopper list logic in text. Exercise 4.3."],
+    "2026-08-13": ["JS: objects + JSON", "Destructuring; model a todo AND a building element. Exercise 4.4."],
+    "2026-08-14": ["JS: practice day", "10 Cursor-generated exercises on arrays + objects, solved solo."],
+    "2026-08-15": ["Project Saturday: beam calculator", "Console app: bending moments per beam, flag overloads. Exercise 4.5."]
+  },
+  weeks: {
+    5:  ["DOM — selecting, modifying, creating elements", "Todo renders from a JS array"],
+    6:  ["Events, forms, input handling", "Todo fully interactive — Project 1 frontend done"],
+    7:  ["JS architecture — modules, closures", "Todo refactored into modules"],
+    8:  ["Async JS — promises, async/await", "Founder track starts: create problem-log.md"],
+    9:  ["Fetch deep-dive, error handling, JSON APIs", "App consuming 2 public APIs"],
+    10: ["Node vs browser JS, npm", "CLI todo tool in Node"],
+    11: ["HTTP + Express basics", "First API: GET/POST todos"],
+    12: ["Express middleware, validation (zod)", "Robust todo API"],
+    13: ["Auth — JWT, cookies, hashing", "Signup/login (platform capability: auth)"],
+    14: ["MongoDB + Mongoose", "Todos persist in Mongo"],
+    15: ["PostgreSQL + Prisma", "Project 1 fullstack done · Mom Test read"],
+    16: ["TypeScript basics", "Typed exercises"],
+    17: ["TypeScript in practice", "Todo API migrated to TS"],
+    18: ["React: components, JSX, props, state", "Stateful components"],
+    19: ["React: useEffect, lists, forms", "Todo in React · 15+ problems logged"],
+    20: ["React: router, context, hooks", "Multi-page app with auth state"],
+    21: ["Data fetching, TanStack Query", "Project 2: SpecSense — first LLM call"],
+    22: ["Tailwind", "SpecSense restyled in Tailwind"],
+    23: ["Next.js: app router, server components", "Portfolio ported to Next.js"],
+    24: ["Holiday buffer / catch-up", "Clear any backlog — rest"],
+    25: ["Next.js: API routes, server actions, auth", "Fullstack Next app with login"],
+    26: ["Next.js: deploy, env vars, Neon Postgres", "Project 3 start: ModelHub"],
+    27: ["ModelHub build week", "v1: upload, parse, filter, export · 5+ Mom Test talks"],
+    28: ["LLM APIs — prompts, tokens, cost", "CLI + API-route chatbot"],
+    29: ["Vercel AI SDK + embeddings/RAG", "Streaming chat + spec-PDF mini-RAG"],
+    30: ["IFC on the web — web-ifc / That Open", "3D viewer in ModelHub"],
+    31: ["Speckle (projects/models) + APS survey", "Speckle sync · PICK CAPSTONE PROBLEM"],
+    32: ["File pipelines — S3, queues, websockets", "ModelHub v2: async processing"],
+    33: ["Bash, SSH, VPS", "Node app on your VPS"],
+    34: ["pm2, nginx, domains, HTTPS", "Live on your own domain with SSL"],
+    35: ["Docker", "ModelHub dockerized on VPS"],
+    36: ["CI/CD + S3/CDN", "Auto-deploy · CONSULTING SOFT-LAUNCH"],
+    37: ["Capstone: spec + Turborepo monorepo", "Written spec + scaffolded monorepo"],
+    38: ["Capstone: core workflow I", "Walking skeleton works end to end"],
+    39: ["Capstone: core workflow II + integration", "Integration live with real data"],
+    40: ["Capstone: multi-tenant auth (RBAC) + AI feature", "Feature-complete for a design partner"],
+    41: ["Capstone: polish, telemetry, tests, deploy", "Production deploy on custom domain"],
+    42: ["Capstone: landing page, waitlist, case study", "MVP LAUNCHED — design partners invited"]
+  },
+  founderMilestones: [
+    ["2026-09-07", "Founder track starts — create problem-log.md (Week 8)"],
+    ["2026-10-31", "The Mom Test finished (end of Week 15)"],
+    ["2026-11-30", "15+ problems logged, first scoring pass"],
+    ["2027-01-31", "5+ Mom Test conversations held"],
+    ["2027-02-20", "Ranked problem list → pick capstone (Week 31)"],
+    ["2027-03-27", "Consulting soft-launch (Week 36)"],
+    ["2027-05-08", "Capstone MVP launched (Week 42)"]
+  ]
+};
+
+// ===================== EXERCISES_DATA (from EXERCISES.md Weeks 0-9) =====================
+const EXERCISES_DATA = [
+  { week: 0, title: "Setup", items: [
+    { id: "0.1", name: "Hello, pipeline", goal: "Install, configure git, create the learning-fullstack repo, push an index.html saying \"Hello, I'm Kshitij\". Follow GETTING-STARTED.md sections 1–3 end to end.", check: "Your repo page on github.com shows index.html and your commit message. Open the file on GitHub and see your HTML.", stretch: "Make a second commit changing the text, push, and find both commits in GitHub's History view." },
+    { id: "0.2", name: "How the web works, in your own words", goal: "Write 5 sentences in learning-log.md explaining what happens between typing a URL and seeing a page (DNS → request → response → render).", check: "Paste your 5 sentences into Cursor Ask mode: \"Grade this explanation out of 10 and correct anything wrong.\"" }
+  ]},
+  { week: 1, title: "HTML", items: [
+    { id: "1.1", name: "Structure from scratch", goal: "Blank file → full HTML skeleton from memory. Add an h1, two paragraphs, a list of 3 AEC tools, and a link to ShapeDiver opening in a new tab.", check: "Right-click → Inspect: the Elements tree matches your intended nesting; the link has target=\"_blank\"." },
+    { id: "1.2", name: "The inquiry form", goal: "Form with name (text), email (email type), project type (select, 3 options), message (textarea), submit. Every input properly labeled.", check: "Clicking each label focuses its input. Submitting an invalid email is blocked by the browser." },
+    { id: "1.3", name: "Todo skeleton", goal: "Static structure: page heading, text input + Add button, list of 3 hardcoded todos each with checkbox and delete button.", check: "Inspect: one ul with three li; each li contains checkbox + text + button." },
+    { id: "1.4", name: "Semantics audit (with Cursor)", goal: "Ask Cursor (Ask mode): \"Audit @index.html for semantic HTML and accessibility. List issues, but let me fix them myself.\" Fix everything by hand.", check: "A second audit request returns no major issues." }
+  ]},
+  { week: 2, title: "CSS core", items: [
+    { id: "2.1", name: "Box model, visible", goal: "Three divs with different margin/padding/border. box-sizing: border-box on one, content-box on another, same width: 200px.", check: "In DevTools, predict each box's rendered width BEFORE looking at the box-model diagram, then confirm. Explain to Cursor why the two 200px boxes differ." },
+    { id: "2.2", name: "Fixed navbar", goal: "Navbar that stays at the top while a tall page scrolls; links spaced horizontally.", check: "Scrolling keeps the bar visible; no content hides under it (hint: body padding-top)." },
+    { id: "2.3", name: "Flexbox axes", goal: "Container with 3 cards. Using only flexbox: (a) row centered both axes, (b) column right-aligned, (c) row with equal space between.", check: "You used justify-content/align-items, not margins. For each layout, say out loud which axis is main and which is cross." },
+    { id: "2.4", name: "Project cards", goal: "Card grid of 3 real past AEC projects (image, title, one-liner). Flexbox with wrap.", check: "Narrow the window — cards wrap instead of overflowing or squashing." }
+  ]},
+  { week: 3, title: "Layout + responsive", items: [
+    { id: "3.1", name: "Grid rebuild", goal: "Rebuild the project cards with CSS Grid: 3 columns desktop, gap for spacing.", check: "DevTools grid badge shows your tracks. Explain to Cursor when you'd pick grid vs flexbox." },
+    { id: "3.2", name: "Mobile-first todo", goal: "Media queries: single column below 600px, two-panel above 900px.", check: "Device toolbar (Ctrl+Shift+M) at 375/768/1200px: no horizontal scrollbar at any width." },
+    { id: "3.3", name: "Polish pass", goal: "Hover states, card shadow, border-radius, 0.2s transitions on the todo app.", check: "Hover changes are smooth. Ask Cursor to critique the design — apply ONE suggestion by hand." },
+    { id: "3.4", name: "Saturday ship", goal: "AEC SaaS landing page: problem headline, 3 feature cards, CTA, footer. Deploy to GitHub Pages.", check: "The live URL loads on your phone. A friend can say in one sentence what the product does — if not, rewrite the headline." }
+  ]},
+  { week: 4, title: "JavaScript basics", items: [
+    { id: "4.1", name: "Console warmup", goal: "const building name, let floor count; increment; template-string print. Try reassigning the const and read the error.", check: "You can explain to Cursor why the error happened and when to pick const vs let." },
+    { id: "4.2", name: "Functions three ways", goal: "areaOfSlab(length, width) as declaration, arrow, and arrow with defaults.", check: "All three return the same number; you can state the syntax differences without looking." },
+    { id: "4.3", name: "Grasshopper in text", goal: "loads = [12.5, 8.2, 22.1, 5.9, 17.3] kN: map +10% safety factor, filter >10, reduce to total, find first >20. Array methods only, no loops.", check: "Compute expected values by hand first; console output matches. Explain each method with a Grasshopper analogy." },
+    { id: "4.4", name: "Objects: your world", goal: "Model { id, type: 'beam', material, spanMeters, loadKN }. Array of 4 elements. Destructure one; JSON.stringify and read it.", check: "Filter all steel beams spanning over 6m in one line." },
+    { id: "4.5", name: "Saturday: beam calculator", goal: "Console program: beams array → M = wL²/8 per beam → formatted report line each → flag any exceeding your chosen limit.", check: "Hand-verify one beam's math. Ask Cursor to review code style only (not the engineering)." }
+  ]},
+  { week: 5, title: "DOM", items: [
+    { id: "5.1", name: "Select and mutate", goal: "querySelector the heading and change its text; querySelectorAll all li and log each; change the 2nd item's background.", check: "Effects visible on page; you can explain querySelector vs querySelectorAll." },
+    { id: "5.2", name: "Render from data (core!)", goal: "Delete hardcoded li's. Define const todos = [...] (objects {text, done}) and write renderTodos() building the list with createElement/appendChild.", check: "Adding to the array and re-running re-renders correctly. This is the mental model React automates — if it feels like magic, redo it from scratch tomorrow." },
+    { id: "5.3", name: "Style via state", goal: "Done items get line-through by toggling a CSS class from JS (classList), driven by the done property. No inline styles.", check: "Flipping a done value and re-rendering updates the strike-through." }
+  ]},
+  { week: 6, title: "Events", items: [
+    { id: "6.1", name: "Add", goal: "Wire input + button: click pushes {text, done:false} into the array, re-renders, clears input. Then also on Enter.", check: "Both paths work; empty input does nothing (guard clause)." },
+    { id: "6.2", name: "Delete + toggle (delegation)", goal: "Delete removes from the ARRAY (then re-render); checkbox toggles done. ONE listener on the ul (event delegation), not one per item.", check: "Add 5, delete the 3rd — the correct one goes. Explain to Cursor why delegation keeps working for new items." },
+    { id: "6.3", name: "Persist", goal: "localStorage: save on every change, load on startup.", check: "Refresh — todos survive. Project 1 frontend done (PLAN.md Week 6 milestone)." }
+  ]},
+  { week: 7, title: "JS architecture", items: [
+    { id: "7.1", name: "Modularize", goal: "Split into state.js (array + add/remove/toggle), render.js (DOM), main.js (wiring) with import/export (needs Live Server).", check: "App works identically; state.js contains ZERO document. references — that separation is the whole lesson." },
+    { id: "7.2", name: "Closure counter", goal: "createCounter() returning {increment, decrement, value} where the count variable is inaccessible from outside.", check: "Two independent counters don't interfere. Explain to Cursor what closes over what." }
+  ]},
+  { week: 8, title: "Async", items: [
+    { id: "8.1", name: "Predict-then-run", goal: "Script with console.log('1'), setTimeout logging '2' at 0ms, promise .then logging '3', console.log('4'). WRITE your predicted order first, then run.", check: "If wrong (likely!), ask Cursor to explain the event loop until you can predict a second variant you invent yourself." },
+    { id: "8.2", name: "Fetch weather", goal: "Open-Meteo (free, no key): fetch Pune's current temperature with async/await; try/catch failure (test with a broken URL). Also: create problem-log.md this week (founder track).", check: "Real temperature prints; broken URL prints your friendly error, not an unhandled rejection." },
+    { id: "8.3", name: "Sequential vs parallel", goal: "Fetch 3 cities' weather one-by-one (await each), then with Promise.all. Time both with console.time.", check: "Parallel is measurably faster; you can explain why." }
+  ]},
+  { week: 9, title: "APIs in earnest", items: [
+    { id: "9.1", name: "Two-API dashboard", goal: "Combine two free APIs: geocode any typed city → then fetch its weather. Loading text while fetching; readable errors.", check: "Misspelled city → friendly message, not a crash. Find both requests in the DevTools Network tab and inspect the JSON." },
+    { id: "9.2", name: "Robustness drill", goal: "Add: a Loading… state, empty-input guard, retry button on failure.", check: "Throttle to Slow 3G in DevTools Network tab and confirm the loading state actually shows." }
+  ]}
+];
+
+// ===================== CHECKLISTS (from EXERCISES.md project checkpoints) =====================
+const CHECKLISTS = [
+  { id: "p1", name: "Project 1 — Todo app", due: "by end of Week 15 (Oct 31, 2026)", items: [
+    "Add / delete / toggle / persist works in the browser (Week 6 version)",
+    "Refactored into modules — state logic has no DOM references (Week 7)",
+    "Express API backs it: signup/login (JWT), todos are per-user (Week 13)",
+    "Data survives a server restart — Mongo, then Postgres+Prisma (Weeks 14–15)",
+    "README with setup steps; a stranger could run it",
+    "You can whiteboard the full request flow (browser → API → DB → back) to Cursor without notes"
+  ]},
+  { id: "p2", name: "Project 2 — SpecSense", due: "Weeks 21–22 (Dec 2026)", items: [
+    "Paste a spec excerpt → structured table renders (discipline, object/class, property, requirement type, unit+value, source clause, confidence)",
+    "Uses structured outputs (JSON Schema), not free-text parsing",
+    "Handles nonsense input gracefully (no crash, honest 'nothing extracted')",
+    "Export to CSV works",
+    "README paragraph: how this could later feed IDS-style model checks (your product thesis)"
+  ]},
+  { id: "p3", name: "Project 3 — ModelHub", due: "Weeks 26–27, extended 30–32 (Jan–Feb 2027)", items: [
+    "Upload IFC → elements in Postgres → dashboard filters + CSV export (v1, Week 27)",
+    "In-browser 3D viewer; click element → properties (Week 30)",
+    "Speckle project push/pull (Week 31)",
+    "Async pipeline: upload → queued job → websocket progress → done (Week 32)",
+    "Architecture rule holds: raw IFC canonical in object storage; viewer formats regenerable; every step writes a job record",
+    "Uploads hardened per OWASP checklist (type/size validation, no trusting filenames)",
+    "TESTING GATE: Vitest units on extraction logic + one Playwright E2E (upload → dashboard)",
+    "Multi-user: users see only their own models"
+  ]},
+  { id: "p4", name: "Project 4 — Capstone MVP", due: "Weeks 37–42 (Mar–May 2027)", items: [
+    "Problem chosen from the validated ranked list (founder track) — not from enthusiasm",
+    "Turborepo monorepo: shared auth + UI packages",
+    "Multi-tenant: orgs, proper RBAC",
+    "One real external integration (Speckle / APS / webhook)",
+    "One openBIM standard beyond IFC in the product (BCF or IDS)",
+    "One AI feature that earns its place",
+    "Telemetry: Sentry + structured logs + job-status records",
+    "Tests: Vitest baseline + Playwright happy path — usable unsupervised by a design partner",
+    "Dockerized, CI/CD, live on your VPS, custom domain + SSL",
+    "Landing page with waitlist + PostHog; case study written; demo video recorded",
+    "Shown to every Mom Test contact"
+  ]}
+];
+// ===================== END DATA =====================
+
+const DAY_MS = 86400000;
+const d = s => { const [y,m,dd] = s.split("-").map(Number); return new Date(y, m-1, dd); };
+const fmt = dt => dt.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+const fmtShort = dt => dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+const iso = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+
+const today = new Date(); today.setHours(0,0,0,0);
+const start = d(PLAN_DATA.start);
+const w1mon = d(PLAN_DATA.week1Monday);
+const end = d(PLAN_DATA.endDate);
+
+function weekOf(date) {
+  if (date < start) return -1;
+  if (date < w1mon) return 0;
+  const w = Math.floor((date - w1mon) / (7 * DAY_MS)) + 1;
+  return w <= 42 ? w : 99;
+}
+function weekMonday(w) { return new Date(w1mon.getTime() + (w - 1) * 7 * DAY_MS); }
+function phaseOfWeek(w) { return PLAN_DATA.phases.find(p => w >= p.weeks[0] && w <= p.weeks[1]); }
+
+// Progress item list
+const items = [];
+Object.keys(PLAN_DATA.days).sort().forEach(ds => {
+  items.push({ id: "day-" + ds, label: PLAN_DATA.days[ds][0], date: d(ds), week: weekOf(d(ds)) });
+});
+for (let w = 5; w <= 42; w++) {
+  const mon = weekMonday(w), sat = new Date(mon.getTime() + 5 * DAY_MS);
+  items.push({ id: "week-" + w, label: `Week ${w}: ${PLAN_DATA.weeks[w][0]}`, sub: PLAN_DATA.weeks[w][1],
+               date: sat, dateLabel: `${fmtShort(mon)} – ${fmtShort(sat)}`, week: w });
+}
+
+const store = {
+  get: id => localStorage.getItem("fsplan-" + id) === "1",
+  set: (id, v) => localStorage.setItem("fsplan-" + id, v ? "1" : "0")
+};
+
+// ---------- Tabs ----------
+document.querySelectorAll("nav.tabs button[data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+});
+function switchTab(name) {
+  document.querySelectorAll("nav.tabs button[data-tab]").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".tab-page").forEach(p => p.classList.toggle("active", p.id === "page-" + name));
+  window.scrollTo(0, 0);
+}
+
+// ---------- Day description helper (used by Today + Tomorrow) ----------
+function describeDay(date, compact) {
+  const w = weekOf(date);
+  const dow = date.getDay();
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  if (w === -1) {
+    const days = Math.ceil((start - date) / DAY_MS);
+    return { label: "Countdown", topic: `Plan starts in ${days} day${days > 1 ? "s" : ""} — ${fmt(start)}`,
+             detail: "Day 1: read GETTING-STARTED.md, install Node + Git, set up GitHub and Cursor." };
+  }
+  if (w === 99) return { label: "Beyond the plan", topic: "The 42 weeks are behind you.",
+    detail: "Iterate on the MVP with design partners and grow the consulting pipeline." };
+  if (dow === 0) return { label: dayNames[0] + " — rest day", topic: "No new material. Optional 10-min ritual.",
+    detail: "Skim next week in PLAN.md + RESOURCES.md; ask Cursor to expand it day-by-day. From Week 8: one problem-log entry. Founder-track reading if scheduled.", week: w };
+  const phase = phaseOfWeek(w);
+  const dayInfo = PLAN_DATA.days[iso(date)];
+  if (dayInfo) return { label: `${dayNames[dow]} · Week ${w} · ${phase.name}`, topic: dayInfo[0], detail: dayInfo[1], week: w, phase };
+  const wk = PLAN_DATA.weeks[w];
+  const satNote = dow === 6 ? "Project Saturday — extend and polish, no new material. " : "";
+  const exNote = w <= 9 ? ` Exercises: Week ${w} (Exercises tab).` : " Generate this week's exercises (Exercises tab, bottom).";
+  return { label: `${dayNames[dow]} · Week ${w} · ${phase.name}`, topic: wk[0],
+           detail: satNote + (compact ? "" : `Ask Cursor: “expand Week ${w} of @PLAN.md into daily tasks.”${exNote}`),
+           milestone: wk[1], week: w, phase };
+}
+
+// ---------- Today + Tomorrow ----------
+function renderToday() {
+  const t = describeDay(today, false);
+  let html = `<div class="day-label">${t.label}</div><div class="topic">${t.topic}</div><div class="detail">${t.detail}</div>`;
+  if (t.milestone) html += `<div class="milestone-flag">Week ${t.week} milestone: ${t.milestone}</div>`;
+  if (t.week !== undefined && t.week >= 0 && t.week !== 99 && t.phase) {
+    const res = PLAN_DATA.phaseResources[t.phase.name];
+    html += `<div class="meta" style="margin-top:12px">
+      <span class="chip">Week <b>${t.week}</b> of 42</span>
+      <span class="chip">Phase: <b>${t.phase.name}</b></span>
+      <span class="chip">Study: <a href="${res[1]}" target="_blank">${res[0]}</a></span>
+      ${t.week <= 9 ? `<span class="chip"><a class="inline" onclick="openExercises(${t.week})">Open Week ${t.week} exercises →</a></span>` : ""}
+      ${t.week >= 8 ? '<span class="chip">Founder: <b>1 problem-log entry this week</b></span>' : ""}
+    </div>`;
+  }
+  document.getElementById("today").innerHTML = html;
+
+  const tm = new Date(today.getTime() + DAY_MS);
+  const t2 = describeDay(tm, true);
+  let html2 = `<h2>Tomorrow</h2><div class="day-label">${t2.label}</div><div class="topic">${t2.topic}</div>
+    <div class="detail" style="font-size:0.87rem;color:var(--muted)">${t2.detail}</div>`;
+  if (t2.milestone) html2 += `<div class="detail" style="font-size:0.82rem;color:var(--accent2)">Milestone this week: ${t2.milestone}</div>`;
+  if (t2.week !== undefined && t2.week >= 0 && t2.week <= 9) {
+    html2 += `<a class="inline" style="font-size:0.85rem" onclick="openExercises(${t2.week})">Preview Week ${t2.week} exercises →</a>`;
+  }
+  document.getElementById("tomorrow").innerHTML = html2;
+
+  const w2 = (t.week !== undefined && t.week >= 0 && t.week !== 99) ? t.week : 0;
+  const ph = phaseOfWeek(Math.min(Math.max(w2, 0), 42)) || PLAN_DATA.phases[0];
+  const res = PLAN_DATA.phaseResources[ph.name];
+  const a = document.getElementById("phase-resource");
+  a.href = res[1];
+  a.firstChild.textContent = res[0] + " ";
+  document.getElementById("phase-resource-desc").textContent = "Primary resource for " + ph.name;
+}
+
+// ---------- Timeline ----------
+function renderTimeline() {
+  const tl = document.getElementById("timeline"), labels = document.getElementById("tl-labels");
+  const curW = weekOf(today);
+  PLAN_DATA.phases.forEach(p => {
+    const span = p.weeks[1] - p.weeks[0] + 1;
+    const seg = document.createElement("div");
+    seg.className = "tl-seg"; seg.style.flex = span;
+    seg.title = `${p.name} (Weeks ${p.weeks[0]}–${p.weeks[1]})`;
+    const fill = document.createElement("div");
+    fill.className = "fill"; fill.style.background = p.color;
+    seg.appendChild(fill);
+    let doneFrac = 0;
+    if (curW === 99 || (curW >= 0 && curW > p.weeks[1])) doneFrac = 1;
+    else if (curW >= p.weeks[0] && curW <= p.weeks[1]) doneFrac = (curW - p.weeks[0] + 0.5) / span;
+    if (doneFrac > 0) {
+      const df = document.createElement("div");
+      df.className = "done-fill"; df.style.background = p.color; df.style.width = (doneFrac * 100) + "%";
+      seg.appendChild(df);
+    }
+    tl.appendChild(seg);
+    const lab = document.createElement("span");
+    lab.style.flex = span; lab.textContent = p.name;
+    labels.appendChild(lab);
+  });
+  const ht = document.getElementById("here-text");
+  if (curW === -1) ht.innerHTML = `Starts <b>${fmt(start)}</b>`;
+  else if (curW === 99) ht.innerHTML = `Plan complete — <b>${fmt(end)}</b> has passed.`;
+  else ht.innerHTML = `You are in <b>Week ${curW}</b> (${phaseOfWeek(curW).name}) · plan ends <b>${fmt(end)}</b>`;
+}
+
+// ---------- Progress ----------
+function renderProgress() {
+  const container = document.getElementById("phases");
+  container.innerHTML = "";
+  const curW = weekOf(today);
+  PLAN_DATA.phases.forEach(p => {
+    const phaseItems = items.filter(i => i.week >= p.weeks[0] && i.week <= p.weeks[1]);
+    if (!phaseItems.length) return;
+    const done = phaseItems.filter(i => store.get(i.id)).length;
+    const det = document.createElement("details");
+    det.className = "phase";
+    det.open = curW >= p.weeks[0] && curW <= p.weeks[1];
+    det.innerHTML = `<summary><span>${p.name} <span style="color:var(--muted);font-weight:400">· Weeks ${p.weeks[0]}–${p.weeks[1]}</span></span><span class="pct">${done}/${phaseItems.length}</span></summary>`;
+    const wrap = document.createElement("div");
+    wrap.className = "items";
+    phaseItems.forEach(i => {
+      const row = document.createElement("div");
+      const isToday = i.id.startsWith("day-") ? iso(today) === i.id.slice(4) : (curW === i.week);
+      row.className = "item" + (store.get(i.id) ? " done" : "") + (isToday ? " today-item" : "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.id = i.id; cb.checked = store.get(i.id);
+      cb.addEventListener("change", () => { store.set(i.id, cb.checked); renderProgress(); renderStats(); });
+      const label = document.createElement("label");
+      label.htmlFor = i.id;
+      label.innerHTML = `${i.label} <span class="d">· ${i.dateLabel || fmtShort(i.date)}${i.sub ? " · " + i.sub : ""}</span>`;
+      row.appendChild(cb); row.appendChild(label);
+      wrap.appendChild(row);
+    });
+    det.appendChild(wrap);
+    container.appendChild(det);
+  });
+}
+
+function renderStats() {
+  const done = items.filter(i => store.get(i.id)).length;
+  const pct = Math.round((done / items.length) * 100);
+  document.getElementById("stat-pct").textContent = pct + "%";
+  document.getElementById("stat-done").textContent = done + "/" + items.length;
+  document.getElementById("progress-inner").style.width = pct + "%";
+  const due = items.filter(i => i.date <= today);
+  let streak = 0;
+  for (let k = due.length - 1; k >= 0; k--) { if (store.get(due[k].id)) streak++; else break; }
+  document.getElementById("stat-streak").textContent = streak;
+  document.getElementById("stat-days").textContent = Math.max(0, Math.ceil((end - today) / DAY_MS));
+}
+
+// ---------- Founder track ----------
+function renderFounder() {
+  const ul = document.getElementById("founder-track");
+  PLAN_DATA.founderMilestones.forEach(([ds, label]) => {
+    const li = document.createElement("li");
+    const past = d(ds) < today;
+    li.innerHTML = `${label} <span class="due ${past ? "done-ms" : ""}">${past ? "✓ " : "due "}${fmtShort(d(ds))} ${d(ds).getFullYear()}</span>`;
+    ul.appendChild(li);
+  });
+}
+
+// ---------- Exercises ----------
+function renderExercises() {
+  const root = document.getElementById("exercise-weeks");
+  const curW = weekOf(today);
+  EXERCISES_DATA.forEach(wk => {
+    const det = document.createElement("details");
+    det.className = "exweek";
+    det.id = "exweek-" + wk.week;
+    det.open = curW === wk.week;
+    const done = wk.items.filter(e => store.get("ex-" + e.id)).length;
+    det.innerHTML = `<summary><span>Week ${wk.week} — ${wk.title}</span><span class="pct">${done}/${wk.items.length} done</span></summary>`;
+    const body = document.createElement("div");
+    body.style.padding = "0 12px 10px";
+    wk.items.forEach(e => {
+      const card = document.createElement("details");
+      card.className = "ex-card";
+      card.id = "ex-" + e.id;
+      card.innerHTML = `<summary><span>${store.get("ex-" + e.id) ? "✅ " : ""}${e.id} — ${e.name}</span></summary>
+        <div class="ex-body">
+          <p><span class="ex-tag goal">Goal</span><br>${e.goal}</p>
+          <p><span class="ex-tag check">Self-check</span><br>${e.check}</p>
+          ${e.stretch ? `<p><span class="ex-tag stretch">Stretch</span><br>${e.stretch}</p>` : ""}
+          <div class="ex-done"><input type="checkbox" id="cb-ex-${e.id}" ${store.get("ex-" + e.id) ? "checked" : ""}>
+          <label for="cb-ex-${e.id}">Done — verified with the self-check and explained back to Cursor</label></div>
+        </div>`;
+      body.appendChild(card);
+    });
+    det.appendChild(body);
+    root.appendChild(det);
+  });
+  root.addEventListener("change", ev => {
+    if (!ev.target.id || !ev.target.id.startsWith("cb-ex-")) return;
+    const exId = ev.target.id.slice(6);
+    store.set("ex-" + exId, ev.target.checked);
+    // Update the card title tick and the week counter in place (no collapse)
+    const wk = EXERCISES_DATA.find(w => w.items.some(e => e.id === exId));
+    const e = wk.items.find(e => e.id === exId);
+    const card = document.getElementById("ex-" + exId);
+    card.querySelector("summary span").textContent = `${ev.target.checked ? "✅ " : ""}${e.id} — ${e.name}`;
+    const done = wk.items.filter(x => store.get("ex-" + x.id)).length;
+    document.getElementById("exweek-" + wk.week).querySelector("summary .pct").textContent = `${done}/${wk.items.length} done`;
+  });
+}
+function openExercises(week) {
+  switchTab("exercises");
+  const det = document.getElementById("exweek-" + week);
+  if (det) { det.open = true; det.scrollIntoView({ behavior: "smooth", block: "start" }); }
+}
+function copyGenPrompt() {
+  navigator.clipboard.writeText(document.getElementById("gen-prompt").textContent)
+    .then(() => alert("Prompt copied — paste it into Cursor and fill in the blanks."));
+}
+
+// ---------- Projects ----------
+function renderProjects() {
+  const root = document.getElementById("project-checklists");
+  root.innerHTML = "";
+  CHECKLISTS.forEach(p => {
+    const done = p.items.filter((_, idx) => store.get(`chk-${p.id}-${idx}`)).length;
+    const pct = Math.round((done / p.items.length) * 100);
+    const det = document.createElement("details");
+    det.className = "phase";
+    det.open = done > 0 && done < p.items.length;
+    det.innerHTML = `<summary><span>${p.name} <span style="color:var(--muted);font-weight:400">· ${p.due}</span></span><span class="pct">${pct}% (${done}/${p.items.length})</span></summary>`;
+    const wrap = document.createElement("div");
+    wrap.className = "items";
+    p.items.forEach((text, idx) => {
+      const id = `chk-${p.id}-${idx}`;
+      const row = document.createElement("div");
+      row.className = "item" + (store.get(id) ? " done" : "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.id = id; cb.checked = store.get(id);
+      cb.addEventListener("change", () => { store.set(id, cb.checked); renderProjects(); });
+      const label = document.createElement("label");
+      label.htmlFor = id; label.textContent = text;
+      row.appendChild(cb); row.appendChild(label);
+      wrap.appendChild(row);
+    });
+    det.appendChild(wrap);
+    root.appendChild(det);
+  });
+}
+
+// ---------- Reading (markdown viewer) ----------
+const readNav = document.getElementById("read-nav");
+readNav.querySelectorAll("button").forEach(b => b.addEventListener("click", () => openReading(b.dataset.file)));
+function openReading(file) {
+  switchTab("reading");
+  readNav.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.file === file));
+  const target = document.getElementById("md-content");
+  if (location.protocol === "file:") {
+    target.innerHTML = `<div class="notice">The in-app reader needs the app to be served over the web (it works on the deployed GitHub Pages URL).
+      Opened locally, just open <b>${file}</b> directly in Cursor or any editor — it's in the same folder as this dashboard.</div>`;
+    return;
+  }
+  target.innerHTML = `<p style="color:var(--muted)">Loading ${file}…</p>`;
+  fetch(file)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(md => { target.innerHTML = marked.parse(md); })
+    .catch(() => { target.innerHTML = `<div class="notice">Couldn't load ${file}. Check that it sits next to dashboard.html in the repo.</div>`; });
+}
+
+// ---------- Export / import progress ----------
+document.getElementById("btn-export").addEventListener("click", () => {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith("fsplan-")) data[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), progress: data }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "fullstack-progress-" + iso(new Date()) + ".json";
+  a.click();
+});
+document.getElementById("btn-import").addEventListener("click", () => document.getElementById("import-file").click());
+document.getElementById("import-file").addEventListener("change", ev => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  file.text().then(txt => {
+    try {
+      const parsed = JSON.parse(txt);
+      const data = parsed.progress || parsed;
+      let n = 0;
+      Object.keys(data).forEach(k => { if (k.startsWith("fsplan-")) { localStorage.setItem(k, data[k]); n++; } });
+      alert(`Imported ${n} progress entries. Reloading.`);
+      location.reload();
+    } catch { alert("That file doesn't look like a progress backup."); }
+  });
+});
+
+renderToday();
+renderTimeline();
+renderProgress();
+renderStats();
+renderFounder();
+renderExercises();
+renderProjects();
+</script>
+</body>
+</html>
