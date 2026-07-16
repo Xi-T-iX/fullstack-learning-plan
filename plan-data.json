@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "start": "2026-07-17",
+    "mvpLaunch": "2027-05-08",
+    "title": "Fullstack Plan",
+    "subtitle": "AI-native AEC founder track",
+    "mvp": {
+      "user": "Project manager at a small AEC firm",
+      "workflow": "Paste a short project brief → structured requirements table → review/edit → export CSV",
+      "ai": "Structured JSON extraction with schema + confidence — not a chatbot",
+      "outOfScope": "Payments, enterprise SSO, mobile apps, BIM authoring"
+    }
+  },
+  "milestones": [
+    {
+      "id": 1,
+      "name": "A live AEC portfolio page on the internet",
+      "start": "2026-07-17",
+      "end": "2026-08-08",
+      "shipped": "Public GitHub Pages portfolio URL",
+      "dod": [
+        "Portfolio live on a phone-openable URL",
+        "GitHub repo with ≥5 commits",
+        "Explain HTML skeleton + one CSS choice without notes",
+        "Tab autocomplete off; exercises typed by you"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "An interactive room inventory in JavaScript, live",
+      "start": "2026-08-10",
+      "end": "2026-08-29",
+      "shipped": "Live add/delete rooms + totals + localStorage",
+      "dod": [
+        "Live URL: add/delete/total/refresh persists",
+        "UI rebuilt from a JS array",
+        "Whiteboard: event → data → render"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "A TypeScript form that saves to a real database, live",
+      "start": "2026-08-31",
+      "end": "2026-09-19",
+      "shipped": "Vercel URL writing rows to Neon Postgres",
+      "dod": [
+        "Live form inserts a Neon row",
+        "TypeScript strict",
+        "Secrets only in env vars",
+        "Explain browser → server → DB → response"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "First React CRUD app, live (Founder Track starts)",
+      "start": "2026-09-21",
+      "end": "2026-10-10",
+      "shipped": "Live React CRUD for rooms/projects",
+      "dod": ["CRUD live", "Explain re-render", "problem-log.md with 3 entries"]
+    },
+    {
+      "id": 5,
+      "name": "Next.js AEC project-data dashboard",
+      "start": "2026-10-12",
+      "end": "2026-10-31",
+      "shipped": "Filtered dashboard + CSV export",
+      "dod": ["Filter + export live", "Mom Test reading started"]
+    },
+    {
+      "id": 6,
+      "name": "SpecSense v1 — structured LLM extraction, live",
+      "start": "2026-11-02",
+      "end": "2026-11-21",
+      "shipped": "Paste text → structured requirements table",
+      "dod": ["Schema-constrained extraction", "Graceful nonsense handling", "No API key in client"]
+    },
+    {
+      "id": 7,
+      "name": "Streaming + simple RAG over a document",
+      "start": "2026-11-23",
+      "end": "2026-12-19",
+      "shipped": "Question → streamed answer with citations",
+      "dod": ["Citations shown", "Honest I-don't-know"]
+    },
+    {
+      "id": 8,
+      "name": "Basic Three.js building-mass viewer",
+      "start": "2026-12-21",
+      "end": "2027-01-16",
+      "shipped": "Live massing viewer from room footprints",
+      "dod": ["Orbit viewer live", "Holiday buffer used for catch-up if needed"]
+    },
+    {
+      "id": 9,
+      "name": "MVP walking skeleton",
+      "start": "2027-01-18",
+      "end": "2027-02-06",
+      "shipped": "Thin end-to-end MVP workflow on a URL",
+      "dod": ["Paste → extract → edit → CSV happy path"]
+    },
+    {
+      "id": 10,
+      "name": "MVP core + useful AI feature",
+      "start": "2027-02-08",
+      "end": "2027-02-27",
+      "shipped": "Hardened MVP with structured AI extract",
+      "dod": ["Design-partner usable", "Vitest + one Playwright path"]
+    },
+    {
+      "id": 11,
+      "name": "Auth, polish, production",
+      "start": "2027-03-01",
+      "end": "2027-03-20",
+      "shipped": "Login + per-user data + polished states",
+      "dod": ["Isolation holds", "Basic error monitoring"]
+    },
+    {
+      "id": 12,
+      "name": "Launch + consulting soft-launch",
+      "start": "2027-03-22",
+      "end": "2027-05-08",
+      "shipped": "Public MVP + landing + outreach",
+      "dod": ["Announcement sent", "Case study + demo", "Celebrate"]
+    }
+  ],
+  "days": [
+    { "date": "2026-07-17", "m": 1, "n": 1, "id": "M1-D1", "title": "Your toolbox: Node, Git, GitHub, Cursor", "lesson": "lessons/m01/d01.md" },
+    { "date": "2026-07-18", "m": 1, "n": 2, "id": "M1-D2", "title": "How the web works + first push", "lesson": "lessons/m01/d02.md" },
+    { "date": "2026-07-20", "m": 1, "n": 3, "id": "M1-D3", "title": "HTML document structure", "lesson": "lessons/m01/d03.md" },
+    { "date": "2026-07-21", "m": 1, "n": 4, "id": "M1-D4", "title": "Semantic HTML", "lesson": "lessons/m01/d04.md" },
+    { "date": "2026-07-22", "m": 1, "n": 5, "id": "M1-D5", "title": "Forms", "lesson": "lessons/m01/d05.md" },
+    { "date": "2026-07-23", "m": 1, "n": 6, "id": "M1-D6", "title": "Static room inventory skeleton", "lesson": "lessons/m01/d06.md" },
+    { "date": "2026-07-24", "m": 1, "n": 7, "id": "M1-D7", "title": "Accessibility audit with AI", "lesson": "lessons/m01/d07.md" },
+    { "date": "2026-07-25", "m": 1, "n": 8, "id": "M1-D8", "title": "Project Saturday — portfolio HTML", "lesson": "lessons/m01/d08.md" },
+    { "date": "2026-07-27", "m": 1, "n": 9, "id": "M1-D9", "title": "CSS selectors and text", "lesson": "lessons/m01/d09.md" },
+    { "date": "2026-07-28", "m": 1, "n": 10, "id": "M1-D10", "title": "The box model", "lesson": "lessons/m01/d10.md" },
+    { "date": "2026-07-29", "m": 1, "n": 11, "id": "M1-D11", "title": "Flexbox I — axes and centering", "lesson": "lessons/m01/d11.md" },
+    { "date": "2026-07-30", "m": 1, "n": 12, "id": "M1-D12", "title": "Flexbox II — wrap and gap", "lesson": "lessons/m01/d12.md" },
+    { "date": "2026-07-31", "m": 1, "n": 13, "id": "M1-D13", "title": "Docs literacy — MDN HTML elements", "lesson": "lessons/m01/d13.md" },
+    { "date": "2026-08-01", "m": 1, "n": 14, "id": "M1-D14", "title": "Saturday — style the portfolio", "lesson": "lessons/m01/d14.md" },
+    { "date": "2026-08-03", "m": 1, "n": 15, "id": "M1-D15", "title": "Responsive basics", "lesson": "lessons/m01/d15.md" },
+    { "date": "2026-08-04", "m": 1, "n": 16, "id": "M1-D16", "title": "Focus states and light motion", "lesson": "lessons/m01/d16.md" },
+    { "date": "2026-08-05", "m": 1, "n": 17, "id": "M1-D17", "title": "AEC product hero copy", "lesson": "lessons/m01/d17.md" },
+    { "date": "2026-08-06", "m": 1, "n": 18, "id": "M1-D18", "title": "GitHub Pages deploy", "lesson": "lessons/m01/d18.md" },
+    { "date": "2026-08-07", "m": 1, "n": 19, "id": "M1-D19", "title": "Production bugfix", "lesson": "lessons/m01/d19.md" },
+    { "date": "2026-08-08", "m": 1, "n": 20, "id": "M1-D20", "title": "Ship Milestone 1", "lesson": "lessons/m01/d20.md" },
+    { "date": "2026-08-10", "m": 2, "n": 1, "id": "M2-D1", "title": "Variables and types", "lesson": "lessons/m02/d01.md" },
+    { "date": "2026-08-11", "m": 2, "n": 2, "id": "M2-D2", "title": "Functions", "lesson": "lessons/m02/d02.md" },
+    { "date": "2026-08-12", "m": 2, "n": 3, "id": "M2-D3", "title": "Array methods", "lesson": "lessons/m02/d03.md" },
+    { "date": "2026-08-13", "m": 2, "n": 4, "id": "M2-D4", "title": "Objects and JSON", "lesson": "lessons/m02/d04.md" },
+    { "date": "2026-08-14", "m": 2, "n": 5, "id": "M2-D5", "title": "Mixed practice", "lesson": "lessons/m02/d05.md" },
+    { "date": "2026-08-15", "m": 2, "n": 6, "id": "M2-D6", "title": "Saturday console calculator", "lesson": "lessons/m02/d06.md" },
+    { "date": "2026-08-17", "m": 2, "n": 7, "id": "M2-D7", "title": "DOM select and change", "lesson": "lessons/m02/d07.md" },
+    { "date": "2026-08-18", "m": 2, "n": 8, "id": "M2-D8", "title": "Render from data", "lesson": "lessons/m02/d08.md" },
+    { "date": "2026-08-19", "m": 2, "n": 9, "id": "M2-D9", "title": "Events — Add", "lesson": "lessons/m02/d09.md" },
+    { "date": "2026-08-20", "m": 2, "n": 10, "id": "M2-D10", "title": "Delegation — Delete", "lesson": "lessons/m02/d10.md" },
+    { "date": "2026-08-21", "m": 2, "n": 11, "id": "M2-D11", "title": "Totals and empty states", "lesson": "lessons/m02/d11.md" },
+    { "date": "2026-08-22", "m": 2, "n": 12, "id": "M2-D12", "title": "Saturday polish", "lesson": "lessons/m02/d12.md" },
+    { "date": "2026-08-24", "m": 2, "n": 13, "id": "M2-D13", "title": "localStorage", "lesson": "lessons/m02/d13.md" },
+    { "date": "2026-08-25", "m": 2, "n": 14, "id": "M2-D14", "title": "Modules", "lesson": "lessons/m02/d14.md" },
+    { "date": "2026-08-26", "m": 2, "n": 15, "id": "M2-D15", "title": "Closures", "lesson": "lessons/m02/d15.md" },
+    { "date": "2026-08-27", "m": 2, "n": 16, "id": "M2-D16", "title": "Docs literacy — localStorage", "lesson": "lessons/m02/d16.md" },
+    { "date": "2026-08-28", "m": 2, "n": 17, "id": "M2-D17", "title": "Deploy interactive app", "lesson": "lessons/m02/d17.md" },
+    { "date": "2026-08-29", "m": 2, "n": 18, "id": "M2-D18", "title": "Ship Milestone 2", "lesson": "lessons/m02/d18.md" },
+    { "date": "2026-08-31", "m": 3, "n": 1, "id": "M3-D1", "title": "Why TypeScript", "lesson": "lessons/m03/d01.md" },
+    { "date": "2026-09-01", "m": 3, "n": 2, "id": "M3-D2", "title": "Everyday types", "lesson": "lessons/m03/d02.md" },
+    { "date": "2026-09-02", "m": 3, "n": 3, "id": "M3-D3", "title": "Narrowing", "lesson": "lessons/m03/d03.md" },
+    { "date": "2026-09-03", "m": 3, "n": 4, "id": "M3-D4", "title": "Docs literacy — TS Handbook", "lesson": "lessons/m03/d04.md" },
+    { "date": "2026-09-04", "m": 3, "n": 5, "id": "M3-D5", "title": "Create Next.js + TS", "lesson": "lessons/m03/d05.md" },
+    { "date": "2026-09-05", "m": 3, "n": 6, "id": "M3-D6", "title": "Saturday typed form UI", "lesson": "lessons/m03/d06.md" },
+    { "date": "2026-09-07", "m": 3, "n": 7, "id": "M3-D7", "title": "Server route or action", "lesson": "lessons/m03/d07.md" },
+    { "date": "2026-09-08", "m": 3, "n": 8, "id": "M3-D8", "title": "Neon Postgres", "lesson": "lessons/m03/d08.md" },
+    { "date": "2026-09-09", "m": 3, "n": 9, "id": "M3-D9", "title": "Prisma schema", "lesson": "lessons/m03/d09.md" },
+    { "date": "2026-09-10", "m": 3, "n": 10, "id": "M3-D10", "title": "Wire form to insert", "lesson": "lessons/m03/d10.md" },
+    { "date": "2026-09-11", "m": 3, "n": 11, "id": "M3-D11", "title": "zod validation", "lesson": "lessons/m03/d11.md" },
+    { "date": "2026-09-12", "m": 3, "n": 12, "id": "M3-D12", "title": "Saturday harden", "lesson": "lessons/m03/d12.md" },
+    { "date": "2026-09-14", "m": 3, "n": 13, "id": "M3-D13", "title": "Vercel deploy", "lesson": "lessons/m03/d13.md" },
+    { "date": "2026-09-15", "m": 3, "n": 14, "id": "M3-D14", "title": "Production smoke", "lesson": "lessons/m03/d14.md" },
+    { "date": "2026-09-16", "m": 3, "n": 15, "id": "M3-D15", "title": "Review your diff", "lesson": "lessons/m03/d15.md" },
+    { "date": "2026-09-17", "m": 3, "n": 16, "id": "M3-D16", "title": "Admin list page", "lesson": "lessons/m03/d16.md" },
+    { "date": "2026-09-18", "m": 3, "n": 17, "id": "M3-D17", "title": "Final fixes", "lesson": "lessons/m03/d17.md" },
+    { "date": "2026-09-19", "m": 3, "n": 18, "id": "M3-D18", "title": "Ship Milestone 3", "lesson": "lessons/m03/d18.md" }
+  ]
+}

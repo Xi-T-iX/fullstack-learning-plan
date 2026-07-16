@@ -1,330 +1,477 @@
-# Kshitij's Fullstack Plan — AEC B2B SaaS Founder Edition
+# Fullstack Plan — AI-Native AEC Founder Track
 
-**Start:** Friday, July 17, 2026
-**Consulting soft-launch:** ~late March 2027
-**Capstone MVP launched:** ~May 8, 2027 (with slippage buffer: early June 2027)
-**Pace:** 1–2 hrs/day, 6 days/week (Sunday off) + ~1.5 hrs/week founder track from Week 8
+**Start:** Friday, 17 Jul 2026  
+**MVP launch:** Friday, 8 May 2027  
+**Pace:** 90 minutes/day, Mon–Sat (Sundays off)  
+**Stack (one path, no detours):** HTML/CSS → JavaScript → TypeScript (by Milestone 3) → React → Next.js → Postgres (Neon) → Vercel  
 
----
-
-## How to use this plan (the four-file kit)
-
-| File | What it's for |
-|------|---------------|
-| [dashboard.html](https://xi-t-ix.github.io/fullstack-learning-plan/) | **Your daily entry point** — live at [xi-t-ix.github.io/fullstack-learning-plan](https://xi-t-ix.github.io/fullstack-learning-plan/), opens automatically with the 10:30 reminder. Today's task, tomorrow preview, exercises, project checklists, progress, streak, timeline. Track progress in ONE browser; export a backup weekly |
-| **PLAN.md** (this file) | The roadmap — what to learn, when, and why |
-| [GETTING-STARTED.md](GETTING-STARTED.md) | Tool setup, Cursor basics, git, project setup recipes. **New to Cursor or dev tools? Read this FIRST, before Week 0 Day 1.** |
-| [RESOURCES.md](RESOURCES.md) | What to study each phase — one primary resource, one backup |
-| [EXERCISES.md](EXERCISES.md) | Stepwise practice with self-checks (Weeks 0–9 fully written), plus definition-of-done checklists for all 4 projects |
-
-Daily loop: PLAN.md tells you today's topic → RESOURCES.md tells you what to study → EXERCISES.md tells you how to practice and verify → GETTING-STARTED.md section 5 shows the exact workflow and Cursor prompts.
+Open **[dashboard.html](https://xi-t-ix.github.io/fullstack-learning-plan/)** every session. Lessons live in `lessons/`. Update the app only via `node sync.mjs` (see GETTING-STARTED.md).
 
 ---
 
-## Who this plan is for
+## Who this is for
 
-- B.Arch + MSc Computational Design + PhD Structural Engineering — you already think computationally (Grasshopper, Dynamo, beginner Python/C#). New material is the *web stack*, not programming logic.
-- Technical Solutions Consultant at ShapeDiver, managing 150+ AEC accounts — daily exposure to real workflow pain across the industry.
-- **Goal: build a suite of B2B SaaS products for AEC + offer solution consulting and implementation services.** ShapeDiver is a reference point and network, not a template — you are explicitly *not* building another configurator company.
+You are an architect / computational designer (Grasshopper, ShapeDiver, B2B sales) with **zero professional coding experience**. You learn by doing, with plain language and construction analogies. End goal: ship a small AEC B2B SaaS MVP yourself — a founder who builds with AI, not a job-seeking developer chasing algorithms.
 
-**The operating model:** consulting (integrations, automation, custom tools) funds the runway starting ~March 2027; products compound on top. Every project in this plan practices a *reusable platform capability* — auth, file handling, viewers, data pipelines — so your eventual products share infrastructure instead of starting from zero each time.
+**ShapeDiver is a reference network, not a product template.** Do not build another Grasshopper-to-web configurator.
 
 ---
 
-## How the syllabus was modified
+## Fixed end goals (what “done” means by May 2027)
 
-The 100xdevs syllabus (Web Dev 16 topics + DevOps 14 topics) is the skeleton. Changes for the AI era and your founder direction:
+1. You can explain every line of code you ship (typed by you; AI is tutor/reviewer).
+2. Twelve live URLs exist — one per milestone — however small.
+3. **MVP shipped:** one workflow, one user type, one useful AI feature, no payments.
+4. You have a repeatable AI-native workflow: ask for hints → build → self-check → explain back → commit.
 
-1. **Added an AI Engineering phase:** LLM APIs, Vercel AI SDK, streaming UIs, structured outputs, embeddings/RAG. B2B buyers now expect AI features, and document/data intelligence is one of your candidate product categories.
-2. **Added an AEC Data & BIM Web Stack phase (Weeks 30–32):** IFC on the web, Speckle, Autodesk Platform Services, geometry file pipelines. "BIM + computational design + web" is your stated moat — this is the phase where it becomes real.
-3. **Compressed:** BunJS → 1 curiosity day. WebRTC → concept-level reading only. Websockets and queues are learned inside the file-pipeline context (Week 32) instead of as isolated exercises.
-4. **Turborepo earned, not skipped:** it becomes the monorepo backbone of your product suite, learned in capstone Week 37.
-5. **Deferred (post-first-revenue):** Kubernetes 1&2, ASGs/MIGs, IaC, monitoring stacks, Firecracker/sandboxing. These are scale skills; revisit when a product or client demands them.
-6. **Kept fully:** HTML/CSS/JS/TS fundamentals, React, Next.js, databases, HTTP, Docker, nginx, certs, CI/CD, S3/CDN. AI writes code fast, but *you* must read, verify, and debug it — that's what clients and customers pay for.
-7. **Projects reflavored** so each one explores a *candidate product category* while training a platform capability (see project specs).
+### MVP definition (locked)
 
----
+| | |
+|--|--|
+| **User** | Project manager at a small AEC firm |
+| **Workflow** | PM pastes a short project brief → app extracts a structured requirements table → PM reviews/edits rows → exports CSV |
+| **AI feature** | Structured extraction (JSON schema), not a chat toy |
+| **Out of scope** | Payments, multi-tenant enterprise SSO, mobile apps, BIM authoring |
 
-## The Cursor Learning Protocol (read this weekly)
-
-Cursor is your tutor, not your ghostwriter. The failure mode of AI-era learning is producing working apps you can't explain. Rules:
-
-**Phase 1–2 (fundamentals, Jul–Oct):**
-- Type all code yourself. Turn Tab autocomplete OFF or ignore it.
-- Use **Ask mode** constantly: "explain this error", "why does this CSS not center", "quiz me on yesterday's topic", "explain like I know Grasshopper but not JS".
-- After every bug you fix, ask Cursor: "what concept was I missing?"
-
-**Phase 3–5 (React/Next/DBs, Nov–Jan):**
-- Let Cursor scaffold boilerplate (config, repetitive JSX), but **read every diff line by line** before accepting.
-- Write the core logic yourself first, then ask Cursor to review it.
-- Daily habit: ask "critique my code like a senior dev".
-
-**Phase 6+ (AI/BIM/capstone, Feb+):**
-- Full agent mode is fine — you now direct, review, and verify like a lead engineer.
-- Practice *spec-writing*: describe features precisely, evaluate the output. This IS the modern founder skill — you'll use it on every product you build.
-
-**Every day, regardless of phase:**
-- Commit to GitHub with a message you wrote yourself.
-- Keep a `learning-log.md` — 2–3 lines: what I built, what confused me, what clicked.
-
-**From ModelHub (Week 26) onward — the testing gate:**
-- No project counts as "done" without baseline unit tests (Vitest) and one Playwright happy-path E2E test. Cheap to learn now, brutal to retrofit later. Ask Cursor to teach you the first tests on your own code.
+Founder Track (scoping this MVP) stays **dormant until Milestone 4**.
 
 ---
 
-## Daily template (~90 min)
+## How you learn with Cursor (every day)
 
-| Block | Activity |
-|-------|----------|
-| 0:00–0:10 | Review yesterday's log; ask Cursor to quiz you on it |
-| 0:10–0:40 | Learn: 100xdevs video / docs / Cursor Ask-mode deep-dive |
-| 0:40–1:25 | **Build** (the part that sticks) |
-| 1:25–1:30 | Commit + update learning-log.md |
+| Phase of plan | Cursor use |
+|---------------|------------|
+| M1–M3 | **Ask mode default.** Type all exercise code. Tab autocomplete OFF. |
+| M4–M7 | AI may scaffold boilerplate; **you read every diff** before accept. Core logic still yours first. |
+| M8–M12 | Agent mode OK for speed; you write specs and verify like a lead. |
 
-Mon–Fri: new material. **Saturday:** no new material — extend/polish the week's project. **Sunday:** off (plus the optional 10-min weekly ritual, and from Week 8, the founder track reading).
-
----
-
-# TRACK 2 — Discovery & Validation (the founder track)
-
-**Starts Week 8 (Sep 7, 2026). ~1.5 hrs/week, separate from the daily 90 minutes.** This track decides what your capstone — and first product — actually is. The capstone is deliberately NOT predetermined today.
-
-**Weekly (30–60 min):** log at least one problem observation in `problem-log.md`:
-- Patterns from your ShapeDiver account work — *ethically: workflow patterns and pain categories, never client IP or confidential specifics*.
-- AEC communities: r/BIM, Dynamo/Grasshopper forums, LinkedIn AEC tech circles, Design Morphine network.
-- Each entry: who has the problem, current workaround, how often it hurts, would they pay.
-
-**Monthly (30 min):** score accumulated problems on five axes (1–5 each):
-1. Frequency — how often does it bite?
-2. Severity — cost in hours/money when it does?
-3. Willingness to pay — is budget attached to this pain?
-4. Unfair advantage — does your B.Arch/PhD/computational background matter here?
-5. Defensibility — does solving it accumulate data or workflow lock-in?
-
-**Reading list (fold into Sundays, one at a time):**
-- *The Mom Test* (Rob Fitzpatrick) — how to interview without leading the witness. Read by end of October.
-- Positioning case studies: how Speckle, Buildots, TestFit, and Higharc each carved a category (all already in your CRM — study their wedge, pricing, and who they sell to).
-- **openBIM standards literacy (Feb 2027, Sundays of Weeks 30–32, ~3 hrs total, reading not building):** BCF (issue/viewpoint communication around models), IDS (machine-readable information requirements), and CRS/georeferencing basics in IFC 4.3. This is what separates credible BIM QA tooling from "a prettier viewer" — and IDS is the bridge from SpecSense-style document extraction to automated model checks.
-
-**Milestones:**
-- **End of Nov 2026:** 15+ logged problems, first scoring pass done.
-- **End of Jan 2027:** 5+ real conversations held (Mom Test style — about their workflow, not your ideas).
-- **Mid-Feb 2027 (Week 31):** ranked list of 3+ validated problem areas. Pick the capstone problem from this list.
+**Standing rules** are in GETTING-STARTED.md. Short version: struggle 15–20 min on concepts (then hints); tooling/PATH after 5 min; never accept exercise solutions on first ask.
 
 ---
 
-# PART 1 — Day-by-day: Weeks 0–4 (Jul 17 – Aug 15, 2026)
+## Daily 90-minute block
 
-## Week 0 — Setup (Fri Jul 17 – Sun Jul 19)
+| Time | Phase |
+|------|--------|
+| 0:00–0:10 | Review / quiz (yesterday + any review-queue redo) |
+| 0:10–0:40 | Lesson (in the dashboard) |
+| 0:40–1:25 | **Build** the exercise |
+| 1:25–1:30 | Commit + 2–3 line log |
 
-*Before Day 1: read [GETTING-STARTED.md](GETTING-STARTED.md) fully — it has the exact install steps, Cursor basics, and git commands this week uses.*
-
-- **Fri Jul 17:** Follow GETTING-STARTED.md sections 1–2: install Node.js LTS + Git, create/configure GitHub, learn the Cursor layout and chat modes, disable Tab autocomplete. Ask Cursor to explain: "what actually happens when I `git commit` and `git push`?"
-- **Sat Jul 18:** Follow GETTING-STARTED.md section 3 + Exercise 0.1 in [EXERCISES.md](EXERCISES.md): create repo `learning-fullstack`, add `learning-log.md`, write and push a hello-world `index.html`. Learn: how the web works — DNS, HTTP request/response, browser rendering (Exercise 0.2). (Ask Cursor to explain it using an analogy to how Grasshopper sends compute requests to ShapeDiver's servers — genuinely the same pattern.)
-- **Sun Jul 19:** Off — or set up your 100xdevs course access + skim Week 1 material.
-
-## Week 1 — HTML (Mon Jul 20 – Sat Jul 25)
-
-- **Mon Jul 20:** Document structure, headings, paragraphs, lists, links. Build: a plain-HTML personal page (name, background, what you're learning).
-- **Tue Jul 21:** Images, attributes, divs/spans, semantic tags (`header`, `nav`, `main`, `footer`). Extend the page.
-- **Wed Jul 22:** Forms — inputs, labels, buttons, selects. Build: a "project inquiry" form (you'll reuse this pattern in every B2B product: lead capture, quote requests, waitlists).
-- **Thu Jul 23:** Tables, iframes, meta tags. Build: static skeleton of the **Todo app** (header, input, list of hardcoded items).
-- **Fri Jul 24:** Semantic HTML + accessibility basics. Ask Cursor to audit your Todo skeleton for semantics and explain every suggestion.
-- **Sat Jul 25:** Project day: static skeleton of **your portfolio site** — "Kshitij — computational designer building web tools for AEC." One page, pure HTML.
-
-## Week 2 — CSS core (Mon Jul 27 – Sat Aug 1)
-
-- **Mon Jul 27:** Selectors, colors, units (px/rem/%), text styling. Style your personal page.
-- **Tue Jul 28:** **Box model** — margin, padding, border, box-sizing. (This is the #1 beginner wall; give it a full day. Ask Cursor for interactive exercises.)
-- **Wed Jul 29:** Display types, position (relative/absolute/fixed/sticky). Build: a fixed navbar.
-- **Thu Jul 30:** **Flexbox** day 1 — main axis, cross axis, justify/align. Lay out the Todo app properly.
-- **Fri Jul 31:** Flexbox day 2 — wrap, grow/shrink, real layouts. Build: a card grid of your past AEC projects (use your real portfolio work — screenshots of Grasshopper/Rhino projects).
-- **Sat Aug 1:** Project day: style the Todo app fully. It should look *good*, not just work.
-
-## Week 3 — CSS layout + responsive (Mon Aug 3 – Sat Aug 8)
-
-- **Mon Aug 3:** CSS Grid — template columns/rows, gap, areas.
-- **Tue Aug 4:** Grid vs flexbox — rebuild the project card layout with grid.
-- **Wed Aug 5:** Responsive design — media queries, mobile-first thinking. Make the Todo app mobile-friendly.
-- **Thu Aug 6:** Transitions, hover states, shadows, border-radius — polish. Ask Cursor: "make this feel like a modern SaaS landing page and explain each change."
-- **Fri Aug 7:** Build day: **landing page for an imaginary AEC SaaS product** (invent one — a BIM QA tool, a spec checker, anything *not* a configurator). Practice writing B2B copy: problem, outcome, call-to-action. This is your first product-marketing artifact.
-- **Sat Aug 8:** Finish + deploy the landing page and portfolio on **GitHub Pages**. First live URLs. Share the portfolio link on LinkedIn if you're feeling brave.
-
-## Week 4 — JavaScript basics I (Mon Aug 10 – Sat Aug 15)
-
-*(You know variables/loops from Python and Grasshopper — the concepts transfer; the syntax is new. Move briskly.)*
-
-- **Mon Aug 10:** Variables (let/const), types, operators, template strings. Exercises in the browser console.
-- **Tue Aug 11:** Functions, arrow functions, scope. Ask Cursor: "compare JS functions to Grasshopper components — inputs, outputs, side effects."
-- **Wed Aug 12:** Arrays + methods (`map`, `filter`, `reduce`, `find`). This is Grasshopper list logic in text form — lean on that intuition.
-- **Thu Aug 13:** Objects, destructuring, JSON. Model a todo as an object; a building element as an object (do both — the second one is your world, and it's the seed of every BIM data structure you'll touch in Week 30).
-- **Fri Aug 14:** Loops, conditionals, practice problems. Ask Cursor to generate 10 exercises mixing arrays + objects; solve without help; then review together.
-- **Sat Aug 15:** Mini-project: **unit converter or beam load calculator** in the console — pure JS logic, AEC-flavored.
+**Saturday:** ship/polish + redo one exercise from **4+ weeks ago** from scratch (no notes).  
+**Sunday:** off. Optional 10 min: skim next days; from M4, one founder note.
 
 ---
 
-# PART 2 — Dated weekly plan: Weeks 5–42 (Aug 2026 – May 2027)
+# Milestone 1 — A live AEC portfolio page on the internet
 
-Each week = 5 learning days + 1 project Saturday, same daily template. Weeks 5–9 have fully written exercises in [EXERCISES.md](EXERCISES.md); from Week 10 use its generation pattern to create the week's exercises with Cursor. Study material per phase is in [RESOURCES.md](RESOURCES.md). Ask Cursor to expand any week into a day-by-day breakdown when you get there ("expand Week 12 into daily tasks based on PLAN.md").
+**Dates:** 17 Jul 2026 → 8 Aug 2026  
+**Shipped outcome:** Public URL (GitHub Pages) — one-page portfolio: who you are, 3 AEC projects, contact. Ugly is fine; live is required.
 
-## Phase: JavaScript + DOM (finish the frontend foundation)
+### Concepts
+Tools (Node, Git, GitHub, Cursor) · How the web works · HTML structure & semantics · Forms · Minimal CSS (box model, flex, responsive) · Deploy · Asking Cursor for hints, not answers
 
-| Week | Dates (2026) | Topics | Milestone |
-|------|-------------|--------|-----------|
-| 5 | Aug 17–22 | DOM — selecting, modifying, creating elements | Todo app: render list from a JS array |
-| 6 | Aug 24–29 | Events, forms, input handling | **Todo app fully interactive (Project 1 frontend ✓)** |
-| 7 | Aug 31–Sep 5 | JS architecture — modules, clean structure, closures | Refactor Todo into modules |
-| 8 | Sep 7–12 | Async JS — callbacks, promises, async/await | Fetch from a public API. **Founder track starts: create `problem-log.md`** |
-| 9 | Sep 14–19 | Fetch deep-dive, error handling, JSON APIs | Small app consuming 2 public APIs |
+### Saturday review
+Sat 8 Aug: redo **Exercise M1-D3** (HTML structure from memory) before polishing the live site.
 
-## Phase: Backend (Node, HTTP, Express)
+### Definition of done
+- [ ] Portfolio live on a URL you can open on your phone
+- [ ] Repo on GitHub with ≥5 commits you wrote messages for
+- [ ] You can explain HTML skeleton + one CSS layout choice to Cursor without notes
+- [ ] Tab autocomplete still off; all exercise HTML/CSS typed by you
 
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 10 | Sep 21–26 | Node vs browser JS, npm, running scripts | CLI todo tool in Node |
-| 11 | Sep 28–Oct 3 | HTTP deep-dive + Express basics — routes, req/res | First API: GET/POST todos (in-memory) |
-| 12 | Oct 5–10 | Express middleware, validation (zod), error handling | Robust todo API |
-| 13 | Oct 12–17 | Auth — JWT, cookies, password hashing | Signup/login on the API (platform capability #1: auth) |
+### Days & exercises
 
-## Phase: Databases
+#### Day 2026-07-17 — M1-D1 · Your toolbox
+**Concept:** What Node, Git, GitHub, and Cursor are (not how to master them yet).  
+**Lesson:** `lessons/m01/d01.md`
 
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 14 | Oct 19–24 | MongoDB + Mongoose — documents, CRUD | Todos persist in Mongo |
-| 15 | Oct 26–31 | PostgreSQL — SQL, joins; Prisma ORM | Same API on Postgres+Prisma. **Project 1 fullstack ✓.** *Founder track: The Mom Test finished* |
-
-## Phase: TypeScript
-
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 16 | Nov 2–7 | TS basics — types, interfaces, generics | Typed exercises |
-| 17 | Nov 9–14 | TS in practice | Migrate the todo API to TS. All new code is TS from here on |
-
-## Phase: React
-
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 18 | Nov 16–21 | Components, JSX, props, state | Static components → stateful counter/cards |
-| 19 | Nov 23–28 | useEffect, lists, forms, lifting state | Rebuild Todo in React against your own API. *Founder track: 15+ problems logged, first scoring pass* |
-| 20 | Nov 30–Dec 5 | Router, context, custom hooks | Multi-page app with auth state |
-| 21 | Dec 7–12 | Data fetching patterns, TanStack Query basics | **Project 2: "SpecSense" — AI spec extractor** (first LLM API call) |
-
-## Phase: Tailwind + Next.js
-
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 22 | Dec 14–19 | Tailwind — utility classes, responsive, components | Restyle Project 2 in Tailwind |
-| 23 | Dec 21–26 | Next.js — app router, pages, layouts, server components | Port portfolio to Next.js |
-| 24 | Dec 28–Jan 2 | **Holiday buffer / catch-up week** — review, polish, rest | Clear any backlog |
-| 25 | Jan 4–9 (2027) | Next.js — API routes, server actions, auth (NextAuth/better-auth) | Fullstack Next app with login |
-| 26 | Jan 11–16 | Next.js — deploy to Vercel, env vars, Postgres in prod (Neon) | **Project 3 start: "ModelHub" — BIM data dashboard** |
-| 27 | Jan 18–23 | Project 3 build week — file upload, data extraction, dashboard | ModelHub v1: upload, parse, filter, export. *Founder track: 5+ Mom Test conversations done* |
-
-## Phase: AI Engineering (the 2026 differentiator)
-
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 28 | Jan 25–30 | LLM APIs — chat completions, system prompts, tokens, cost | CLI + API-route chatbot |
-| 29 | Feb 1–6 | Vercel AI SDK — streaming, tool calling, structured outputs; embeddings + RAG basics (pgvector, chunking) | Streaming chat app + "chat with an AEC spec PDF" mini-RAG |
-
-## Phase: AEC Data & BIM Web Stack (your moat, made technical)
-
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 30 | Feb 8–13 | IFC on the web — web-ifc / That Open Company; loading and querying BIM models in the browser | IFC viewer embedded in ModelHub; element properties queryable |
-| 31 | Feb 15–20 | Speckle — projects/models (the current names for what older docs call "streams"), connectors, webhooks; Autodesk Platform Services — viewer + model derivative APIs (survey level) | Push/pull data to a Speckle project from your app. **Founder track: pick the capstone problem from your ranked list** |
-| 32 | Feb 22–27 | File/data pipelines — secure uploads (follow the OWASP file-upload checklist), S3, Redis queues, background geometry processing, websocket progress updates (WebRTC: concept reading only) | ModelHub v2: async model processing with live progress (platform capability: pipelines) |
-
-*Sunday reading during this phase (founder track): BCF, IDS, and CRS/georeferencing basics — see the openBIM item in the Track 2 reading list.*
-
-## Phase: Deployment & DevOps essentials
-
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 33 | Mar 1–6 | Bash/terminal fluency + a cheap VPS (Hetzner/DO), SSH | Node app running on your VPS |
-| 34 | Mar 8–13 | Process mgmt (pm2), nginx reverse proxy, domains, HTTPS certs | Your app live on your own domain with SSL |
-| 35 | Mar 15–20 | Docker — images, containers, compose | Dockerize ModelHub, run on VPS |
-| 36 | Mar 22–27 | CI/CD (GitHub Actions) + S3/CDN + object storage — incl. multipart uploads for large files and S3 event notifications for event-driven processing | Auto-deploy pipeline. **Consulting soft-launch ✓** (see runway section) |
-
-## Phase: Capstone — validated MVP (6 weeks)
-
-| Week | Dates | Topics | Milestone |
-|------|-------|--------|-----------|
-| 37 | Mar 29–Apr 3 | Spec the MVP from your validated problem. Set up Turborepo monorepo (the suite's backbone: shared auth, UI package, config) | Written spec + scaffolded monorepo |
-| 38 | Apr 5–10 | Core workflow build 1 — the single job-to-be-done | Walking skeleton: the core loop works end to end |
-| 39 | Apr 12–17 | Core workflow build 2 + external integration (Speckle / APS / webhook into an AEC tool) | Integration live with real data |
-| 40 | Apr 19–24 | Multi-tenant auth — orgs, proper RBAC (roles/permissions, least privilege), OIDC awareness (what "Sign in with Microsoft/Google" means for B2B buyers). SCIM: know what it is, defer building it | Feature-complete for one design partner |
-| 41 | Apr 26–May 1 | Polish, error states, onboarding flow, telemetry (Sentry + structured logs + job-status records), tests (Vitest + Playwright happy path), Dockerized CI/CD deploy to your VPS | Production deploy on custom domain |
-| 42 | May 3–8 | Landing page + waitlist with PostHog analytics, case study writeup, demo video. Show it to every Mom Test contact | **MVP launched ✓ — first design partners invited** |
+**Exercise M1-D1 — Install and verify**  
+**Goal:** All four tools installed; you can prove each works.  
+**You will use:** Browser, installer UIs, Cursor terminal (`Ctrl+\``).  
+**Steps:**  
+1. Follow GETTING-STARTED.md §1 — Node LTS, Git, GitHub account, Cursor settings (Tab off).  
+2. In a **new** terminal run `node -v` and `git --version`.  
+3. In Cursor Ask mode, ask: “In one sentence each, what are Node, Git, and GitHub?”  
+**Constraints:** Do not skip the version checks. Do not enable Tab autocomplete.  
+**Self-check:** Both commands print version numbers; Ask mode replies.  
+**Expected:** Versions on screen; you know Git ≠ GitHub.  
+**AI-native practice:** Use Ask mode only — no Agent editing your machine for you.
 
 ---
 
-# Project specs (each = one platform capability + one product category explored)
+#### Day 2026-07-18 — M1-D2 · How the web works + first push
+**Concept:** DNS → HTTP request → response → browser render; git commit/push.  
+**Lesson:** `lessons/m01/d02.md`
 
-**Project 1 — Todo app** *(Weeks 1–15, evolves with you)*
-The classic trainer. HTML skeleton → styled → interactive → API-backed → DB-persisted → rebuilt in React/TS. Boring on purpose; every new concept lands here first. Capability trained: CRUD + auth fundamentals.
-
-**Project 2 — "SpecSense"** *(Week 21)*
-Paste an AEC spec/standard excerpt → LLM extracts structured requirements into a table you can sort and export. Use structured outputs (JSON Schema) with this shape: **discipline, object/class, property/parameter, requirement type, unit + value, source clause, confidence**. First LLM call, first structured outputs. ~3–4 days of work at that point. Category explored: **AI document intelligence**. Capability trained: LLM integration.
-*Product thesis note: IDS (Information Delivery Specification) is the openBIM standard for machine-readable requirements — SpecSense's extraction schema is a natural on-ramp from "document → structured requirement" to "requirement → automated model check". That link (document intelligence → BIM QA) is a candidate wedge for the capstone.*
-
-**Project 3 — "ModelHub"** *(Weeks 26–27, extended in 30–32)*
-Upload an IFC file → view it in-browser → extract element data into Postgres → dashboard with filters and CSV/Excel exports. Later gains a 3D viewer (Week 30), Speckle sync (Week 31), and async processing pipelines (Week 32). Category explored: **BIM data / model QA**. Capabilities trained: file handling, relational modeling, viewers, pipelines. Also becomes your consulting demo piece.
-*Architecture rule: the raw IFC in object storage is the canonical source of truth. Viewer-friendly formats (That Open fragments, SVF) are disposable derivatives — regenerable at any time. Extracted element data lives in Postgres; every pipeline step writes a job record (status, timing, errors). This one rule is the difference between a course project and a consulting-grade demo.*
-*Definition of done (testing gate applies): upload → parse → dashboard works end to end, uploads are hardened per the OWASP checklist, baseline Vitest unit tests exist for the extraction logic, and one Playwright E2E covers the upload-to-dashboard happy path.*
-
-**Project 4 — Capstone: the validated MVP** *(Weeks 37–42)*
-**Deliberately not specified today.** Chosen in mid-Feb 2027 (Week 31) from the founder track's ranked problem list. Candidate categories seeded now:
-- Interop / data sync between AEC tools
-- Workflow automation for design firms
-- AI spec/document intelligence (SpecSense grown up)
-- BIM model QA automation (ModelHub grown up)
-- Computational-design-as-a-service (your Grasshopper/optimization expertise, productized — *without* copying ShapeDiver's configurator lane)
-
-Non-negotiable requirements whichever problem wins:
-- Multi-tenant auth (orgs, proper RBAC) — B2B table stakes
-- One real external integration (Speckle, APS, or a webhook into an AEC tool)
-- One openBIM standard beyond IFC in the product (BCF or IDS) — this is what makes it credible AEC software rather than a generic web app
-- One AI feature that earns its place
-- Telemetry: Sentry error tracking, structured logs, job-status records on every pipeline step
-- Tested: baseline Vitest unit tests + one Playwright happy-path E2E (a design partner should be able to use it without you whispering "please don't click too fast")
-- Dockerized, CI/CD, deployed on your VPS with custom domain + SSL
-- Landing page with a real waitlist, PostHog analytics, and a case study
-
-*Syllabus coverage note: the original "trading app" tech is fully covered — websockets and live updates (Wk 32), queues (Wk 32), real-time data (capstone).*
+**Exercise M1-D2 — Hello, pipeline**  
+**Goal:** Repo `learning-fullstack` on GitHub with `index.html` saying hello.  
+**Steps:**  
+1. Create folder, `git init`, write `index.html` by hand (skeleton + one `<h1>`).  
+2. Commit and push (GETTING-STARTED §3).  
+3. Write 5 sentences in `learning-log.md`: what happens when someone types a URL.  
+**Self-check:** GitHub shows the file; paste your 5 sentences into Ask mode for a grade /10.  
+**AI-native practice:** After the grade, ask “what concept was I missing?” once.
 
 ---
 
-# Defensibility principles (how to not build a commodity)
+#### Day 2026-07-20 — M1-D3 · HTML document structure
+**Concept:** Elements, tags, nesting — the building’s frame.  
+**Lesson:** `lessons/m01/d03.md`
 
-1. **Compete on workflow depth and data, not features.** Pick problems that require AEC domain judgment — your B.Arch/MSc/PhD is the moat that AI codegen can't replicate. Anyone can build a dashboard; few can know *which* model checks actually matter on a high-rise facade.
-2. **Stay out of ShapeDiver's lane.** Grasshopper-to-web configurators are taken, and you have a professional relationship to respect. Adjacent lanes are open: data interop, QA automation, document intelligence, workflow automation.
-3. **Let data compound.** Prefer products where every customer interaction accumulates structured data (model issues found, requirements extracted, mappings between tools) — that data improves the product and raises switching costs.
-4. **Build a suite, not a tool.** From the capstone onward: shared account system, shared design system, one monorepo. Each product feeds users and data to the next. SpecSense and ModelHub are seeds — the capstone decides which one (or which new idea) becomes product #1.
-5. **Sell the workflow, not the tech.** B2B AEC buyers pay for hours saved and risk removed, never for "AI" or "BIM integration" as such. Every landing page and pitch states the job-to-be-done in the customer's words (which your problem-log gives you verbatim).
-
----
-
-# Consulting & product runway (parallel, low effort until March)
-
-- **Aug 8, 2026:** Portfolio live on GitHub Pages (Week 3 Saturday).
-- **Sep 7 onward:** Founder track running — problem log growing weekly.
-- **Dec onward:** Every project gets a live URL + README with screenshots. SpecSense and ModelHub double as conversation starters in Mom Test interviews ("I built a prototype — does this resemble your problem?").
-- **Jan–Feb 2027:** 5+ discovery conversations. Quietly signal to your AEC network (Design Morphine, VNIT/UACEG contacts, LinkedIn) that you build web tools for AEC workflows.
-- **Week 36 (late March 2027): consulting soft-launch.** Offer: *custom integrations, workflow automation, and AI features for AEC firms* — scoped projects, not staff augmentation. ModelHub + your integration skills are the demo. Price the first 1–2 engagements low for testimonials and problem intel; every consulting gig is also product discovery.
-- **Week 42 (May 2027):** Capstone MVP launched with waitlist + case study. Consulting revenue funds iteration; design partners come from your interview contacts.
-- **Conflict rule:** no engagements that compete with ShapeDiver's configurator business while you work there; be transparent if scope drifts near it.
-
-# Deferred (revisit only when a product or client demands it)
-
-Kubernetes 1&2, ASGs/MIGs, IaC/Terraform, full monitoring/observability stacks (OpenTelemetry — Sentry + logs + job records cover you until then), Firecracker/sandboxing, and the e2b/Replit-clone/Cloudflare-Workers projects. Also deferred: **Temporal / durable workflow orchestration** (a Redis queue with retries and idempotent jobs covers you well past MVP) and **SCIM provisioning** (matters when enterprise IT departments provision your users — a post-revenue problem). These are scale and infra-employment skills. Your syllabus images cover them — return after first revenue, when scaling is a real problem you're lucky enough to have.
+**Exercise M1-D3 — Structure from memory**  
+**Goal:** Blank file → valid page: `h1`, 2 paragraphs, list of 3 AEC tools, link to ShapeDiver (`target="_blank"`).  
+**Constraints:** Type from memory after one read of the lesson; no copy-paste from chat.  
+**Self-check:** Inspect → Elements tree matches your nesting; link has `target="_blank"`.  
+**AI-native practice:** If stuck 15 min, ask for a **hint** (“what tag wraps list items?”) not the full file.
 
 ---
 
-# Weekly ritual (Sundays, 10 min)
+#### Day 2026-07-21 — M1-D4 · Semantic HTML
+**Concept:** `header` / `nav` / `main` / `footer` vs soup of `div`s.  
+**Lesson:** `lessons/m01/d04.md`
 
-1. Skim next week's row in this file, plus its section in [RESOURCES.md](RESOURCES.md).
-2. Ask Cursor: "expand Week N of @PLAN.md into a day-by-day breakdown, adjusted for where I actually am." (From Week 10, also generate the week's exercises using the pattern in [EXERCISES.md](EXERCISES.md).)
-3. From Week 8: add one entry to `problem-log.md` if the week didn't produce one naturally.
-4. Before declaring any project done, audit it against its checklist in [EXERCISES.md](EXERCISES.md).
-5. If you're behind: don't compress learning — push dates. The plan has slack (Week 24 buffer, Saturday catch-ups, and the May→June capstone buffer). Consistency > speed.
+**Exercise M1-D4 — Restructure the page**  
+**Goal:** Same content, semantic landmarks; one image with meaningful `alt`.  
+**Self-check:** Landmarks visible in Accessibility tree (DevTools).  
+**AI-native practice:** Ask mode: “Audit @index.html for semantics — list issues only, don’t edit.”
+
+---
+
+#### Day 2026-07-22 — M1-D5 · Forms
+**Concept:** Labeled inputs — every B2B lead form’s bones.  
+**Lesson:** `lessons/m01/d05.md`
+
+**Exercise M1-D5 — Project inquiry form**  
+**Goal:** Form: name, email, project type (`select`), message, submit; every control has a `<label>`.  
+**Self-check:** Clicking label focuses control; invalid email blocked by browser.  
+**AI-native practice:** Ask why `label`+`for` matters for accessibility — explain back in your words.
+
+---
+
+#### Day 2026-07-23 — M1-D6 · Static room list skeleton
+**Concept:** Lists as structure for data you’ll later make dynamic.  
+**Lesson:** `lessons/m01/d06.md`
+
+**Exercise M1-D6 — Room inventory skeleton**  
+**Goal:** Page titled “Room inventory”: input + Add button (not wired), `<ul>` of 3 hardcoded rooms (name + area m²).  
+**Self-check:** One `ul`, three `li`, each with text for name and area.  
+**AI-native practice:** Resist Agent “make it work” — today is HTML only.
+
+---
+
+#### Day 2026-07-24 — M1-D7 · Accessibility + AI audit
+**Concept:** Using AI as auditor, you as fixer.  
+**Lesson:** `lessons/m01/d07.md`
+
+**Exercise M1-D7 — Fix the audit**  
+**Goal:** Ask Cursor (Ask) to audit room inventory for a11y; **you** apply every fix by hand.  
+**Self-check:** Second audit returns no major issues.  
+**AI-native practice:** Never let Agent apply the fixes — you type them.
+
+---
+
+#### Day 2026-07-25 — M1-D8 · Project Saturday: portfolio HTML
+**Concept:** Shipping a real artifact > perfect CSS.  
+**Lesson:** `lessons/m01/d08.md`
+
+**Exercise M1-D8 — Portfolio skeleton**  
+**Goal:** One semantic HTML page: intro, 3 real past projects (text OK), contact. No CSS required.  
+**Saturday review:** n/a yet (too early).  
+**Self-check:** Page opens locally; outline is `h1` then project `h2`s.
+
+---
+
+#### Day 2026-07-27 — M1-D9 · CSS selectors & text
+**Concept:** Selectors target structure; CSS is finishes, not structure.  
+**Lesson:** `lessons/m01/d09.md`
+
+**Exercise M1-D9 — First stylesheet**  
+**Goal:** External `styles.css`: font, colors, spacing on portfolio.  
+**Self-check:** Changing CSS changes the page; HTML file has `<link rel="stylesheet">`.
+
+---
+
+#### Day 2026-07-28 — M1-D10 · Box model
+**Concept:** Margin / padding / border / `box-sizing` — the #1 beginner wall.  
+**Lesson:** `lessons/m01/d10.md`
+
+**Exercise M1-D10 — Predict the width**  
+**Goal:** Three boxes, same `width:200px`, different box-sizing; predict rendered width before DevTools.  
+**Self-check:** Predictions match DevTools box model; you explain the difference in Ask mode.
+
+---
+
+#### Day 2026-07-29 — M1-D11 · Flexbox I
+**Concept:** Main axis vs cross axis.  
+**Lesson:** `lessons/m01/d11.md`
+
+**Exercise M1-D11 — Center a card**  
+**Goal:** Using only flexbox, center a project card horizontally and vertically in the viewport.  
+**Self-check:** You say out loud which axis is main; no margin-auto hacks as the only skill.
+
+---
+
+#### Day 2026-07-30 — M1-D12 · Flexbox II
+**Concept:** Wrap and gap for card rows.  
+**Lesson:** `lessons/m01/d12.md`
+
+**Exercise M1-D12 — Project card row**  
+**Goal:** Three project cards in a wrapping flex row with gap.  
+**Self-check:** Narrow window → cards wrap, no horizontal scrollbar.
+
+---
+
+#### Day 2026-07-31 — M1-D13 · Docs literacy (MDN HTML elements)
+**Concept:** Reading official docs is a skill.  
+**Lesson:** `lessons/m01/d13.md`
+
+**Exercise M1-D13 — Read one MDN page**  
+**Goal:** Read [MDN: HTML elements reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements) (skim) and answer in `learning-log.md`: (1) difference between `<section>` and `<div>`, (2) when to use `<article>`, (3) one element you hadn’t used yet and why it exists.  
+**Self-check:** Three answers in your log, graded by Cursor Ask.
+
+---
+
+#### Day 2026-08-01 — M1-D14 · Project Saturday: style portfolio
+**Concept:** Polish without new concepts.  
+**Lesson:** `lessons/m01/d14.md`
+
+**Exercise M1-D14 — Make it look intentional**  
+**Goal:** Portfolio uses flex, readable type, hover on links.  
+**Self-check:** Ask Cursor for **one** design critique; apply only that one.
+
+---
+
+#### Day 2026-08-03 — M1-D15 · Responsive basics
+**Concept:** Mobile-first media queries.  
+**Lesson:** `lessons/m01/d15.md`
+
+**Exercise M1-D15 — Phone check**  
+**Goal:** Portfolio usable at 375px width.  
+**Self-check:** DevTools device mode, no horizontal scroll at 375 / 768 / 1200.
+
+---
+
+#### Day 2026-08-04 — M1-D16 · Minimal polish
+**Concept:** Transition + focus states (enough CSS).  
+**Lesson:** `lessons/m01/d16.md`
+
+**Exercise M1-D16 — Focus visible**  
+**Goal:** Keyboard Tab shows clear focus on links/buttons.  
+**Self-check:** Navigate page with Tab only.
+
+---
+
+#### Day 2026-08-05 — M1-D17 · Landing strip for an AEC product idea
+**Concept:** B2B copy: problem → outcome → CTA (founder muscle).  
+**Lesson:** `lessons/m01/d17.md`
+
+**Exercise M1-D17 — Fake product hero**  
+**Goal:** Extra section or separate page: headline for a **non-configurator** AEC SaaS idea + CTA button (href `#`).  
+**Self-check:** A friend can say what problem it solves in one sentence.
+
+---
+
+#### Day 2026-08-06 — M1-D18 · Deploy prep
+**Concept:** GitHub Pages mechanics.  
+**Lesson:** `lessons/m01/d18.md`
+
+**Exercise M1-D18 — Pages settings**  
+**Goal:** Enable GitHub Pages on the repo; note the URL.  
+**Self-check:** URL loads (may take a minute).
+
+---
+
+#### Day 2026-08-07 — M1-D19 · Fix live bugs
+**Concept:** Production surprises (paths, case sensitivity).  
+**Lesson:** `lessons/m01/d19.md`
+
+**Exercise M1-D19 — Phone test**  
+**Goal:** Open live URL on your phone; fix anything broken; commit.  
+**Self-check:** Phone load OK.
+
+---
+
+#### Day 2026-08-08 — M1-D20 · Ship Milestone 1
+**Concept:** Definition of done > endless polish.  
+**Lesson:** `lessons/m01/d20.md`
+
+**Exercise M1-D20 — Close M1**  
+**Goal:** Tick M1 definition of done; redo Exercise M1-D3 from scratch in a throwaway file (Saturday review); commit; export progress.json.  
+**Self-check:** Live URL in Projects tab of the dashboard.
+
+---
+
+# Milestone 2 — An interactive room inventory in JavaScript, live
+
+**Dates:** 10 Aug 2026 → 29 Aug 2026  
+**Shipped outcome:** Live page: add/delete rooms (name, area m²), totals update, survives refresh (`localStorage`).
+
+### Concepts
+JS values & functions · Arrays/objects · DOM render-from-data · Events · localStorage · Modules intro · Cursor for debugging (paste errors, not “rewrite it”)
+
+### Saturday review
+Sat 29 Aug: redo **M1-D10 box model** exercise from scratch, then ship M2.
+
+### Definition of done
+- [ ] Live URL: add / delete / total area / refresh keeps data
+- [ ] State lives in a JS array; HTML list is rebuilt from it (not edited ad hoc)
+- [ ] You can whiteboard: event → change data → re-render
+
+### Day list (lessons `lessons/m02/d01.md` …)
+
+| Date | ID | Title |
+|------|-----|--------|
+| 2026-08-10 | M2-D1 | Variables, types, `const`/`let` |
+| 2026-08-11 | M2-D2 | Functions (door-schedule analogy) |
+| 2026-08-12 | M2-D3 | Arrays: map / filter / reduce |
+| 2026-08-13 | M2-D4 | Objects & JSON — model a room |
+| 2026-08-14 | M2-D5 | Practice day (mixed drills) |
+| 2026-08-15 | M2-D6 | Saturday: console area calculator |
+| 2026-08-17 | M2-D7 | DOM: select & change |
+| 2026-08-18 | M2-D8 | Render list from array (core) |
+| 2026-08-19 | M2-D9 | Events: Add room |
+| 2026-08-20 | M2-D10 | Event delegation: delete |
+| 2026-08-21 | M2-D11 | Totals & empty states |
+| 2026-08-22 | M2-D12 | Saturday: polish UI |
+| 2026-08-24 | M2-D13 | localStorage persist |
+| 2026-08-25 | M2-D14 | Modules: split state / render |
+| 2026-08-26 | M2-D15 | Closures (short) |
+| 2026-08-27 | M2-D16 | Docs literacy: MDN `localStorage` |
+| 2026-08-28 | M2-D17 | Deploy interactive app |
+| 2026-08-29 | M2-D18 | Ship M2 + Saturday review |
+
+**Exercise pattern (every day):** Goal · Steps · Constraints (type it yourself; data = rooms/areas) · Self-check · Expected · AI-native practice (debug with Ask: paste error, ask what concept you missed). Full exercise text is in each lesson file; PLAN holds the contract above.
+
+**Core exercise (M2-D8) — Render from data**  
+**Goal:** Delete hardcoded `<li>`s; `const rooms = [{name, area}, …]`; `renderRooms()` builds the list.  
+**Self-check:** Push one room in the console, call `renderRooms()`, UI updates.  
+**Expected:** You feel that React will later automate this exact idea.
+
+---
+
+# Milestone 3 — A TypeScript form that saves to a real database, live
+
+**Dates:** 31 Aug 2026 → 19 Sep 2026  
+**Shipped outcome:** Vercel URL: form (name, email, project type, message) → row in Neon Postgres → success UI. Typed with TypeScript.
+
+### Concepts
+TypeScript everyday types · Next.js app router (minimal) · Server actions or route handler · Neon + Prisma · Env vars · Deploy on Vercel · Reviewing AI-generated Prisma schema diffs
+
+### Saturday review
+Sat 19 Sep: redo **M2-D8 render-from-data** in plain JS from memory, then ship M3.
+
+### Definition of done
+- [ ] Live form inserts a row you can see in Neon console
+- [ ] Project is TypeScript; `strict` true
+- [ ] Secrets only in env vars, not committed
+- [ ] You can explain: browser → server → database → response
+
+### Day list (`lessons/m03/d01.md` …)
+
+| Date | ID | Title |
+|------|-----|--------|
+| 2026-08-31 | M3-D1 | Why TypeScript — first type error |
+| 2026-09-01 | M3-D2 | Everyday types & interfaces |
+| 2026-09-02 | M3-D3 | Narrowing & safe unions |
+| 2026-09-03 | M3-D4 | Docs literacy: TS Handbook Everyday Types |
+| 2026-09-04 | M3-D5 | Create Next.js + TS app |
+| 2026-09-05 | M3-D6 | Saturday: typed inquiry form UI |
+| 2026-09-07 | M3-D7 | Server: route handler vs server action |
+| 2026-09-08 | M3-D8 | Neon project + connection string |
+| 2026-09-09 | M3-D9 | Prisma schema & migrate |
+| 2026-09-10 | M3-D10 | Wire form → DB insert |
+| 2026-09-11 | M3-D11 | Validation (zod) + errors |
+| 2026-09-12 | M3-D12 | Saturday: harden & empty states |
+| 2026-09-14 | M3-D13 | Vercel deploy + env |
+| 2026-09-15 | M3-D14 | Production smoke test |
+| 2026-09-16 | M3-D15 | Read your own diff like a lead |
+| 2026-09-17 | M3-D16 | Simple admin list page (same DB) |
+| 2026-09-18 | M3-D17 | Final fixes |
+| 2026-09-19 | M3-D18 | Ship M3 + review |
+
+---
+
+# Milestone 4 — First React CRUD app, live (Founder Track starts)
+
+**Dates:** 21 Sep 2026 → 10 Oct 2026  
+**Shipped:** Live React (Vite or Next) room CRUD against your API/DB mindset — list/create/update/delete.  
+**Concepts:** Components, props, state, lists, forms, lifting state.  
+**Founder Track ON:** create `problem-log.md`; 1 observation/week.  
+**DoD:** CRUD live; you explain re-render; first 3 problem-log entries.  
+**Lessons:** generate just-in-time (GETTING-STARTED prompt).
+
+---
+
+# Milestone 5 — Next.js AEC project-data dashboard
+
+**Dates:** 12 Oct 2026 → 31 Oct 2026  
+**Shipped:** Dashboard of projects/rooms with filters + CSV export (stepping stone to MVP).  
+**Concepts:** App router, server components, searchParams filters.  
+**DoD:** Filter + export live; Mom Test reading started.
+
+---
+
+# Milestone 6 — SpecSense v1: structured LLM extraction, live
+
+**Dates:** 2 Nov 2026 → 21 Nov 2026  
+**Shipped:** Paste brief/spec excerpt → structured JSON table on screen.  
+**Concepts:** LLM API from server only, prompts, tokens/cost, **structured outputs**.  
+**DoD:** Schema-constrained extraction; nonsense input fails gracefully; no API key in client.
+
+---
+
+# Milestone 7 — Streaming + simple RAG over a document
+
+**Dates:** 23 Nov 2026 → 19 Dec 2026  
+**Shipped:** Upload/paste a short spec → ask a question → streamed answer with chunk citation.  
+**Concepts:** Streaming, embeddings, chunking, retrieve-then-generate, retries.  
+**DoD:** Citations shown; “I don’t know” when not in doc.
+
+---
+
+# Milestone 8 — Basic Three.js building-mass viewer
+
+**Dates:** 21 Dec 2026 → 16 Jan 2027 (includes holiday buffer week)  
+**Shipped:** Page with simple extruded massing (boxes) from room footprint numbers; orbit controls.  
+**Concepts:** Scene/camera/renderer, meshes, your geometry edge.  
+**DoD:** Live viewer; holiday week may be catch-up only.
+
+---
+
+# Milestone 9 — MVP walking skeleton
+
+**Dates:** 18 Jan 2027 → 6 Feb 2027  
+**Shipped:** End-to-end thin slice of the locked MVP workflow on a real URL.  
+**Concepts:** Spec writing, scope cutting, monorepo-light or single Next app.  
+**DoD:** Signup-optional or simple; paste → extract → edit → CSV works on happy path.
+
+---
+
+# Milestone 10 — MVP core + useful AI feature
+
+**Dates:** 8 Feb 2027 → 27 Feb 2027  
+**Shipped:** Hardened extraction + edit UX; AI feature earns its place (structured extract + confidence).  
+**DoD:** Design-partner-usable; Vitest on parsing helpers; one Playwright happy path.
+
+---
+
+# Milestone 11 — Auth, polish, production
+
+**Dates:** 1 Mar 2027 → 20 Mar 2027  
+**Shipped:** Login, per-user data, polished empty/error states, custom domain optional.  
+**DoD:** Users only see own briefs; Sentry or structured logs basic.
+
+---
+
+# Milestone 12 — Launch + consulting soft-launch
+
+**Dates:** 22 Mar 2027 → 8 May 2027  
+**Shipped:** Landing + waitlist + case study + demo video; MVP public; consulting offer page.  
+**DoD:** Announcement sent to Mom Test contacts; progress complete; celebrate.
+
+---
+
+## After this plan
+
+Iterate with design partners. Still deferred: Docker/K8s, LeetCode grinding, framework tourism, payments.
