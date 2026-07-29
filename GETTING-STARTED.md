@@ -107,9 +107,32 @@ Fill in N and the milestone title from PLAN.md.
 
 ---
 
-## 7. Progress backup
+## 7. Progress backup and work folder
 
-In the dashboard: **Export progress** weekly (Saturday). Commit `progress.json` with your work. Import restores after a browser reset. Use **one browser** as the canonical tracker.
+The dashboard **auto-saves** to your browser (`localStorage`). For a durable backup in git:
+
+### Save to work folder (Chrome/Edge — best)
+
+1. Open the dashboard (local `dashboard.html` or live URL).
+2. Click **Save to work folder** (top-right).
+3. First time: select this repo's **`work/`** folder.
+4. Writes `progress.json`, `work-logs.md`, and `logs/*.md` directly — no copy/paste.
+
+### Commit to GitHub (Windows)
+
+From the repo folder in PowerShell:
+
+```powershell
+.\save-progress.ps1 -Push
+```
+
+Use `-FromDownloads` if you used **Export all work** instead of Save to work folder.
+
+### Restore
+
+Dashboard → **Import** → select `work/progress.json`.
+
+See [`work/README.md`](work/README.md) for the full two-repo layout (`learning-fullstack/` for code).
 
 ---
 

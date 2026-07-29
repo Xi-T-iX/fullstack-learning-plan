@@ -16,6 +16,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { DAY_RESOURCES, MILESTONE_RESOURCES, MILESTONE_FOLDERS } from "./scripts/resources-map.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = __dirname;
@@ -78,9 +79,12 @@ function extractSection(md, heading) {
 function main() {
   const plan = JSON.parse(fs.readFileSync(path.join(root, "plan-data.json"), "utf8"));
   const existing = new Set(plan.days.map((d) => d.date));
-  const allDays = [...plan.days, ...expandMilestoneDays(plan.milestones, existing)].sort((a, b) =>
-    a.date < b.date ? -1 : 1
-  );
+  const allDays = [...plan.days, ...expandMilestoneDays(plan.milestones, existing)]
+    .sort((a, b) => (a.date < b.date ? -1 : 1))
+    .map((d) => ({
+      ...d,
+      resources: DAY_RESOURCES[d.id] || MILESTONE_RESOURCES[d.m] || []
+    }));
 
   const lessons = {};
   for (const day of allDays) {
@@ -100,13 +104,18 @@ function main() {
   }
 
   const gettingStarted = fs.readFileSync(path.join(root, "GETTING-STARTED.md"), "utf8");
+  const resourcesMd = fs.existsSync(path.join(root, "RESOURCES.md"))
+    ? fs.readFileSync(path.join(root, "RESOURCES.md"), "utf8")
+    : "";
 
   const payload = {
     meta: plan.meta,
     milestones: plan.milestones,
     days: allDays,
     lessons,
-    docs: { "GETTING-STARTED.md": gettingStarted },
+    milestoneResources: MILESTONE_RESOURCES,
+    milestoneFolders: MILESTONE_FOLDERS,
+    docs: { "GETTING-STARTED.md": gettingStarted, "RESOURCES.md": resourcesMd },
     syncedAt: new Date().toISOString()
   };
 
